@@ -40,7 +40,7 @@
     defaultLang: 'en',      // Default language if prompt disabled ('en' or 'te')
     showLangSwitcher: true, // Floating 'తెలుగు | EN' toggle on the invitation
     adminName: 'Admin',
-    adminPass: '3251', // Default master password (can be customized in /knock)
+    adminPass: 'vanukuri2026', // Master password
     firebaseConfig: null // Optional cloud config
   };
 
@@ -75,6 +75,10 @@
           parsed.familyName = DEFAULT_CONFIG.familyName;
           parsed.familyShort = DEFAULT_CONFIG.familyShort;
           parsed.title = DEFAULT_CONFIG.title;
+          needsUpdate = true;
+        }
+        if (parsed.adminPass === '3251') {
+          parsed.adminPass = DEFAULT_CONFIG.adminPass;
           needsUpdate = true;
         }
         if (needsUpdate) {
