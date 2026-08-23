@@ -33,7 +33,7 @@ if sys.stdout.encoding != 'utf-8':
 #  CONFIGURATION
 # ─────────────────────────────────────────────────────────────
 WEBSITE_URL  = "https://vanukuri2026.netlify.app"
-FAMILY_NAME  = "Vanukuri Veena Damodar Reddy Family"
+FAMILY_NAME  = "Vanukuri Veena Damodar Reddy"
 CEREMONY     = "Housewarming Ceremony"
 EVENT_DATE   = "31 August 2026 · 3:00 AM"
 OUTPUT_FILE  = "invitation_card.png"
@@ -318,7 +318,7 @@ def generate():
     print("WHATSAPP SHARING TEMPLATE (Copy & send this message):")
     print("=" * 64)
     print("Namaste! You are cordially invited to celebrate our new home.")
-    print("\n*Vanukuri Veena Damodar Reddy Family — Housewarming Ceremony*")
+    print("\n*Vanukuri Veena Damodar Reddy — Housewarming Ceremony*")
     print("Date: 31 August 2026 (Monday)")
     print("Auspicious Muhurtham: 3:00 AM")
     print("\nClick below to view ceremonial invitation, location & photos:")

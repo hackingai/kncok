@@ -42,6 +42,12 @@
     if (heroFamily && (config.familyShort || config.familyName)) {
       heroFamily.textContent = config.familyShort || config.familyName;
     }
+
+    // Closing Section
+    var closeFamily = document.querySelector('.closing-family');
+    if (closeFamily && config.familyName) {
+      closeFamily.textContent = config.familyName;
+    }
     var heroPills = document.querySelectorAll('.hero-event-details .detail-pill span:last-child');
     if (heroPills.length >= 2) {
       if (config.dateDisplay) heroPills[0].textContent = config.dateDisplay;

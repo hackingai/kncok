@@ -13,10 +13,10 @@
   var BROADCAST_CHANNEL_NAME = 'knock_invitation_channel';
 
   var DEFAULT_CONFIG = {
-    title: 'Vanukuri Veena Damodar Reddy Family Housewarming Ceremony',
+    title: 'Vanukuri Veena Damodar Reddy Housewarming Ceremony',
     ceremonyName: 'Housewarming Ceremony',
-    familyName: 'Vanukuri Veena Damodar Reddy Family',
-    familyShort: 'Vanukuri Veena Damodar Family',
+    familyName: 'Vanukuri Veena Damodar Reddy',
+    familyShort: 'Vanukuri Veena Damodar Reddy',
     dateDisplay: '31 August 2026',
     dateDay: '31 August',
     dateYearSub: '2026 · Monday',
@@ -31,7 +31,7 @@
     galleryActive: false,
     galleryHeading: 'Event Moments & Photos',
     galleryAlbumUrl: '', // Google Photos / Drive album link
-    venueName: 'Vanukuri Family Residence',
+    venueName: 'Vanukuri Residence',
     venueAddress: 'FJR7+842, East Gandhi Nagar, Aravind Nagar, Nagaram, Secunderabad, Telangana 500083',
     mapEmbedUrl: '',
     mapDirectionsUrl: 'https://www.google.com/maps/place/17.4908348,78.6127061/@17.4908348,78.6127061,18z',
@@ -63,8 +63,18 @@
       if (saved) {
         var parsed = JSON.parse(saved);
         // Automatic migration if old cached Ananthapur address exists
+        var needsUpdate = false;
         if (parsed.venueAddress && parsed.venueAddress.indexOf('Ananthapur') !== -1) {
           parsed.venueAddress = DEFAULT_CONFIG.venueAddress;
+          needsUpdate = true;
+        }
+        if (parsed.familyName && parsed.familyName.indexOf('Family') !== -1) {
+          parsed.familyName = DEFAULT_CONFIG.familyName;
+          parsed.familyShort = DEFAULT_CONFIG.familyShort;
+          parsed.title = DEFAULT_CONFIG.title;
+          needsUpdate = true;
+        }
+        if (needsUpdate) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.assign({}, DEFAULT_CONFIG, parsed)));
         }
         return Object.assign({}, DEFAULT_CONFIG, parsed);

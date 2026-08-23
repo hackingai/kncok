@@ -15,9 +15,9 @@
   function getEventData() {
     var config = window.KnockConfig ? window.KnockConfig.get() : {};
 
-    var title = config.title || 'Vanukuri Veena Damodar Reddy Family Housewarming Ceremony';
-    var desc  = config.invitationNote || 'You are cordially invited to celebrate the Vanukuri Veena Damodar Reddy Family Housewarming Ceremony.';
-    var loc   = config.venueAddress || 'Vanukuri Damodar Reddy Home, Ananthapur, Andhra Pradesh';
+    var title = config.title || 'Vanukuri Veena Damodar Reddy Housewarming Ceremony';
+    var desc  = config.invitationNote || 'You are cordially invited to celebrate the Vanukuri Veena Damodar Reddy Housewarming Ceremony.';
+    var loc   = config.venueAddress || 'FJR7+842, East Gandhi Nagar, Aravind Nagar, Nagaram, Secunderabad, Telangana 500083';
 
     // Dates: Default 31 August 2026, 03:00 AM IST (UTC+5:30)
     // 3:00 AM IST on 31 Aug = 21:30 UTC on 30 Aug

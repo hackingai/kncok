@@ -338,7 +338,7 @@
   function initCardForm() {
     var config = window.KnockConfig ? window.KnockConfig.get() : {};
     if (cfgCeremony) cfgCeremony.value = config.ceremonyName || 'Housewarming Ceremony';
-    if (cfgFamily) cfgFamily.value = config.familyName || 'Vanukuri Veena Damodar Reddy Family';
+    if (cfgFamily) cfgFamily.value = config.familyName || 'Vanukuri Veena Damodar Reddy';
     if (cfgDateDay) cfgDateDay.value = config.dateDisplay || '31 August 2026';
     if (cfgDateSub) cfgDateSub.value = config.dateYearSub || '2026 · Monday';
     if (cfgTime) cfgTime.value = config.timeDisplay || '3:00 AM';
@@ -353,7 +353,7 @@
 
   function updateLivePreview() {
     if (prevTitle && cfgCeremony) prevTitle.innerHTML = (cfgCeremony.value || 'Housewarming Ceremony').replace(' ', '<br/>');
-    if (prevFamily && cfgFamily) prevFamily.textContent = cfgFamily.value || 'Vanukuri Family';
+    if (prevFamily && cfgFamily) prevFamily.textContent = cfgFamily.value || 'Vanukuri Veena Damodar Reddy';
     if (prevDate && cfgDateDay) prevDate.textContent = cfgDateDay.value || '31 August 2026';
     if (prevTime && cfgTime) prevTime.textContent = cfgTime.value || '3:00 AM';
     if (prevNote && cfgNote) prevNote.textContent = cfgNote.value || '';
@@ -392,7 +392,7 @@
 
   if (resetCardBtn) {
     resetCardBtn.addEventListener('click', function () {
-      if (confirm('Reset card details back to the original Vanukuri Family defaults?')) {
+      if (confirm('Reset card details back to the original defaults?')) {
         if (window.KnockConfig) window.KnockConfig.reset();
         initCardForm();
         showToast('Reset back to original defaults.', '🔄');
