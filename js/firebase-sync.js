@@ -407,7 +407,12 @@
 
   window.KnockSync = {
     push: pushConfigToFirebase,
-    isConnected: function() { return db !== null; }
+    isConnected: function() { return db !== null; },
+    clearAnalytics: function() {
+      if (!db) return;
+      db.ref('knock/visitors').remove().catch(function(){});
+      db.ref('knock/daily').remove().catch(function(){});
+    }
   };
 
 })(window);

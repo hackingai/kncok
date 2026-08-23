@@ -230,106 +230,16 @@
   }
 
   function renderAnalytics() {
-    if (!window.KnockAnalytics) return;
-    var stats = window.KnockAnalytics.getStats();
-    var today = stats.today || {};
-    var todayKey = today.date || window.KnockAnalytics.getTodayDateKey();
-
-    // Date Badge
+    // Analytics rendering is now fully handled by firebase-sync.js
+    // which uses real-time Firebase data across all devices.
+    // This function is kept as a no-op to avoid breaking button bindings.
     var dateBadgeText = document.getElementById('today-date-text');
-    if (dateBadgeText) {
-      dateBadgeText.textContent = formatDisplayDate(todayKey) + ' · IST';
+    if (dateBadgeText && window.KnockAnalytics) {
+      var todayKey = window.KnockAnalytics.getTodayDateKey();
+      var parts = todayKey.split('-');
+      var d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+      dateBadgeText.textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · IST';
     }
-
-    // Primary KPIs
-    var kpiTodayUnique = document.getElementById('kpi-today-unique');
-    if (kpiTodayUnique) kpiTodayUnique.textContent = today.uniqueVisitors || 0;
-
-    var kpiActiveNow = document.getElementById('kpi-active-now');
-    if (kpiActiveNow) kpiActiveNow.textContent = stats.activeNow || 0;
-
-    var kpiActiveTabs = document.getElementById('kpi-active-tabs');
-    if (kpiActiveTabs) kpiActiveTabs.textContent = stats.activeTabs || 0;
-
-    // Secondary KPIs
-    var kpiTotalViews = document.getElementById('kpi-total-views');
-    if (kpiTotalViews) kpiTotalViews.textContent = stats.totalViews || 0;
-
-    var kpiCal = document.getElementById('kpi-calendar-clicks');
-    if (kpiCal) kpiCal.textContent = stats.calendarClicks || 0;
-
-    var kpiLoc = document.getElementById('kpi-location-clicks');
-    if (kpiLoc) kpiLoc.textContent = stats.locationClicks || 0;
-
-    // Device breakdown (Mobile, Desktop, Tablet, Smart TV)
-    var devSource = (today.devices && (today.devices.mobile + today.devices.desktop + today.devices.tablet + today.devices.tv > 0))
-      ? today.devices
-      : (stats.devices || { mobile: 0, desktop: 0, tablet: 0, tv: 0 });
-
-    var mobCount = devSource.mobile || 0;
-    var deskCount = devSource.desktop || 0;
-    var tabCount = devSource.tablet || 0;
-    var tvCount = devSource.tv || 0;
-    var devTotal = (mobCount + deskCount + tabCount + tvCount) || 1;
-
-    var mobPct = Math.round((mobCount / devTotal) * 100);
-    var deskPct = Math.round((deskCount / devTotal) * 100);
-    var tabPct = Math.round((tabCount / devTotal) * 100);
-    var tvPct = Math.round((tvCount / devTotal) * 100);
-
-    var elMobPct = document.getElementById('dev-mobile-pct');
-    var elMobBar = document.getElementById('dev-mobile-bar');
-    if (elMobPct) elMobPct.textContent = mobPct + '% (' + mobCount + ')';
-    if (elMobBar) elMobBar.style.width = mobPct + '%';
-
-    var elDeskPct = document.getElementById('dev-desktop-pct');
-    var elDeskBar = document.getElementById('dev-desktop-bar');
-    if (elDeskPct) elDeskPct.textContent = deskPct + '% (' + deskCount + ')';
-    if (elDeskBar) elDeskBar.style.width = deskPct + '%';
-
-    var elTabPct = document.getElementById('dev-tablet-pct');
-    var elTabBar = document.getElementById('dev-tablet-bar');
-    if (elTabPct) elTabPct.textContent = tabPct + '% (' + tabCount + ')';
-    if (elTabBar) elTabBar.style.width = tabPct + '%';
-
-    var elTvPct = document.getElementById('dev-tv-pct');
-    var elTvBar = document.getElementById('dev-tv-bar');
-    if (elTvPct) elTvPct.textContent = tvPct + '% (' + tvCount + ')';
-    if (elTvBar) elTvBar.style.width = tvPct + '%';
-
-    // Platform breakdown
-    var platSource = stats.platforms || { android: 0, ios: 0, windows: 0, mac: 0, smart_tv: 0, other: 0 };
-    var platTotal = (platSource.android || 0) + (platSource.ios || 0) + (platSource.windows || 0) + (platSource.mac || 0) + (platSource.smart_tv || 0) + (platSource.other || 0) || 1;
-    var andPct = Math.round(((platSource.android || 0) / platTotal) * 100);
-    var iosPct = Math.round(((platSource.ios || 0) / platTotal) * 100);
-    var othPct = Math.round((((platSource.windows || 0) + (platSource.mac || 0) + (platSource.other || 0)) / platTotal) * 100);
-    var tvPlatPct = Math.round(((platSource.smart_tv || 0) / platTotal) * 100);
-
-    var elAndPct = document.getElementById('plat-android-pct');
-    var elAndBar = document.getElementById('plat-android-bar');
-    if (elAndPct) elAndPct.textContent = andPct + '% (' + (platSource.android || 0) + ')';
-    if (elAndBar) elAndBar.style.width = andPct + '%';
-
-    var elIosPct = document.getElementById('plat-ios-pct');
-    var elIosBar = document.getElementById('plat-ios-bar');
-    if (elIosPct) elIosPct.textContent = iosPct + '% (' + (platSource.ios || 0) + ')';
-    if (elIosBar) elIosBar.style.width = iosPct + '%';
-
-    var elOthPct = document.getElementById('plat-other-pct');
-    var elOthBar = document.getElementById('plat-other-bar');
-    if (elOthPct) elOthPct.textContent = othPct + '% (' + ((platSource.windows || 0) + (platSource.mac || 0) + (platSource.other || 0)) + ')';
-    if (elOthBar) elOthBar.style.width = othPct + '%';
-
-    var elTvPlatPct = document.getElementById('plat-tv-pct');
-    var elTvPlatBar = document.getElementById('plat-tv-bar');
-    if (elTvPlatPct) elTvPlatPct.textContent = tvPlatPct + '% (' + (platSource.smart_tv || 0) + ')';
-    if (elTvPlatBar) elTvPlatBar.style.width = tvPlatPct + '%';
-
-    // Historical Daily Table
-    renderDailyHistoryTable();
-
-    // Recent Visitors table
-    renderRecentVisitorsTable(stats);
   }
 
   var refreshStatsBtn = document.getElementById('refresh-stats-btn');
@@ -343,10 +253,14 @@
   var clearStatsBtn = document.getElementById('clear-stats-btn');
   if (clearStatsBtn) {
     clearStatsBtn.addEventListener('click', function () {
-      if (confirm('Are you sure you want to reset all analytics metrics? This will clear today and past records.')) {
+      if (confirm('Are you sure you want to reset all analytics? This clears Firebase data too.')) {
+        // Clear localStorage
         if (window.KnockAnalytics) window.KnockAnalytics.clearStats();
-        renderAnalytics();
-        showToast('Analytics data reset to 0.', '🗑️');
+        // Clear Firebase
+        if (window.KnockSync && window.KnockSync.clearAnalytics) {
+          window.KnockSync.clearAnalytics();
+        }
+        showToast('Analytics data cleared.', '🗑️');
       }
     });
   }
