@@ -1,47 +1,74 @@
 """
 generate_invite.py — Vanukuri Family Housewarming Invitation Card Generator
 ============================================================================
-Generates a clean shareable image with QR code.
-Guests scan → land on the full invitation website.
+Generates an Ultra-HD shareable invitation card with an optimized instant-scan QR code.
+Guests scan or click -> land on the full ceremonial invitation website.
+
+Features:
+  - Optimized QR code (Level M, high contrast, enlarged modules for instant scanning)
+  - Dedicated text link below QR for direct typing
+  - Royal Lord Ganesha sacred header (॥ श्री गणेशाय नमः ॥)
+  - WhatsApp share-ready message snippet output
 
 Requirements:
     pip install pillow qrcode
 
 Usage:
     python generate_invite.py
-    
-Output:
-    invitation_card.png  — Share on WhatsApp, print, or use anywhere
 """
 
+import sys
+import os
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
-import os
+
+# Ensure safe console UTF-8 printing on Windows
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 
 # ─────────────────────────────────────────────────────────────
-#  CONFIGURATION — Only edit these two lines
+#  CONFIGURATION
 # ─────────────────────────────────────────────────────────────
-WEBSITE_URL  = "https://vanukuri2026.netlify.app"  # ← paste your Netlify URL
+WEBSITE_URL  = "https://vanukuri2026.netlify.app"
 FAMILY_NAME  = "Vanukuri Veena Damodar Reddy Family"
+CEREMONY     = "Housewarming Ceremony"
+EVENT_DATE   = "31 August 2026 · 3:00 AM"
 OUTPUT_FILE  = "invitation_card.png"
 
 # ─────────────────────────────────────────────────────────────
-#  DESIGN TOKENS
+#  DESIGN TOKENS (Ultra-HD Portrait for WhatsApp Sharing)
 # ─────────────────────────────────────────────────────────────
-W, H         = 1080, 1350   # portrait — perfect for WhatsApp
+W, H         = 1080, 1500
 
-BG_TOP       = (15,  28,  22)
-BG_BOTTOM    = (8,   15,  12)
-GOLD         = (212, 175, 55)
-GOLD_LIGHT   = (240, 210, 120)
-GOLD_DIM     = (140, 110, 35)
+BG_TOP       = (15,  28,  22)   # deep emerald
+BG_BOTTOM    = (8,   15,  12)   # regal dark emerald
+GOLD         = (212, 175, 55)   # #d4af37
+GOLD_LIGHT   = (245, 226, 150)  # #f5e296
+GOLD_DIM     = (150, 120, 35)
 WHITE        = (255, 255, 255)
-WHITE_DIM    = (220, 215, 200)
-WHITE_FAINT  = (160, 150, 130)
+WHITE_DIM    = (230, 225, 210)
+WHITE_FAINT  = (175, 165, 145)
 
 # ─────────────────────────────────────────────────────────────
-#  FONT LOADER
+#  FONT LOADERS
 # ─────────────────────────────────────────────────────────────
+def load_indic(size):
+    """Loads Indic / Devanagari font for Sanskrit shloka and sacred symbols."""
+    for path in [
+        "C:/Windows/Fonts/Nirmala.ttc",
+        "C:/Windows/Fonts/NirmalaB.ttc",
+        "C:/Windows/Fonts/mangal.ttf",
+        "C:/Windows/Fonts/aparaj.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+    ]:
+        if os.path.exists(path):
+            try: return ImageFont.truetype(path, size)
+            except Exception: pass
+    return ImageFont.load_default()
+
 def load_serif(size):
     for path in [
         "C:/Windows/Fonts/georgia.ttf",
@@ -51,7 +78,7 @@ def load_serif(size):
     ]:
         if os.path.exists(path):
             try: return ImageFont.truetype(path, size)
-            except: pass
+            except Exception: pass
     return ImageFont.load_default()
 
 def load_sans(size):
@@ -63,11 +90,11 @@ def load_sans(size):
     ]:
         if os.path.exists(path):
             try: return ImageFont.truetype(path, size)
-            except: pass
+            except Exception: pass
     return ImageFont.load_default()
 
 # ─────────────────────────────────────────────────────────────
-#  HELPERS
+#  DRAWING HELPERS
 # ─────────────────────────────────────────────────────────────
 def centered(draw, y, text, font, color):
     bbox = draw.textbbox((0, 0), text, font=font)
@@ -76,7 +103,7 @@ def centered(draw, y, text, font, color):
     draw.text(((W - tw) // 2, y), text, font=font, fill=color)
     return th
 
-def gold_line(draw, y, width=400):
+def gold_line(draw, y, width=420):
     x0 = W // 2 - width // 2
     x1 = W // 2 + width // 2
     steps = 80
@@ -98,8 +125,27 @@ def corner(draw, x, y, size, d):
 def diamond(draw, cx, cy, size=7):
     draw.polygon([(cx, cy-size),(cx+size, cy),(cx, cy+size),(cx-size, cy)], fill=GOLD)
 
+def draw_swastika(draw, cx, cy, size=16, color=GOLD, width=2):
+    """Draws a precise auspicious Hindu Swastika with 4 bindu dots."""
+    s = size // 2
+    # Main vertical and horizontal cross
+    draw.line([(cx, cy - s), (cx, cy + s)], fill=color, width=width)
+    draw.line([(cx - s, cy), (cx + s, cy)], fill=color, width=width)
+    # 4 clockwise bent arms
+    draw.line([(cx, cy - s), (cx + s, cy - s)], fill=color, width=width) # Top right
+    draw.line([(cx + s, cy), (cx + s, cy + s)], fill=color, width=width) # Right bottom
+    draw.line([(cx, cy + s), (cx - s, cy + s)], fill=color, width=width) # Bottom left
+    draw.line([(cx - s, cy), (cx - s, cy - s)], fill=color, width=width) # Left top
+    # 4 sacred bindu dots in quadrants
+    d = s // 2
+    r = 1
+    draw.ellipse([cx + d - r, cy - d - r, cx + d + r, cy - d + r], fill=color)
+    draw.ellipse([cx + d - r, cy + d - r, cx + d + r, cy + d + r], fill=color)
+    draw.ellipse([cx - d - r, cy + d - r, cx - d + r, cy + d + r], fill=color)
+    draw.ellipse([cx - d - r, cy - d - r, cx - d + r, cy - d + r], fill=color)
+
 # ─────────────────────────────────────────────────────────────
-#  BACKGROUND
+#  BACKGROUND GENERATOR
 # ─────────────────────────────────────────────────────────────
 def make_bg():
     img  = Image.new("RGB", (W, H))
@@ -110,107 +156,139 @@ def make_bg():
         g = int(BG_TOP[1] + (BG_BOTTOM[1] - BG_TOP[1]) * t)
         b = int(BG_TOP[2] + (BG_BOTTOM[2] - BG_TOP[2]) * t)
         draw.line([(0, y), (W, y)], fill=(r, g, b))
+    
+    # Soft warm ambient light at top
+    for r_step in range(260, 0, -2):
+        col = (
+            min(255, BG_TOP[0] + int(24 * (1 - r_step / 260))),
+            min(255, BG_TOP[1] + int(14 * (1 - r_step / 260))),
+            min(255, BG_TOP[2] + int(6  * (1 - r_step / 260))),
+        )
+        draw.ellipse([W//2 - r_step, -r_step//2, W//2 + r_step, r_step], fill=col)
     return img
 
 # ─────────────────────────────────────────────────────────────
-#  QR CODE
+#  OPTIMIZED INSTANT-SCAN QR CODE GENERATOR
 # ─────────────────────────────────────────────────────────────
-def make_qr(url, size=360):
-    qr = qrcode.QRCode(version=3, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=2)
+def make_optimized_qr(url, size=400):
+    """
+    Generates an optimized, fast-scanning QR code:
+      - Uses Level M error correction (15%) for large, clean modules without visual clutter.
+      - High-contrast pure white quiet-zone background with dark emerald modules.
+    """
+    qr = qrcode.QRCode(
+        version=None,  # dynamic minimum version (simple pattern)
+        error_correction=qrcode.constants.ERROR_CORRECT_M,  # fast & clean scan
+        box_size=12,
+        border=2,
+    )
     qr.add_data(url)
     qr.make(fit=True)
-    img = qr.make_image(fill_color=(15, 28, 22), back_color=(245, 235, 195)).convert("RGB")
-    return img.resize((size, size), Image.LANCZOS)
+
+    # Sharp crisp contrast
+    qr_img = qr.make_image(
+        fill_color=(15, 28, 22),
+        back_color=(255, 255, 255)
+    ).convert("RGB")
+
+    return qr_img.resize((size, size), Image.LANCZOS)
 
 # ─────────────────────────────────────────────────────────────
-#  MAIN
+#  MAIN CARD GENERATOR
 # ─────────────────────────────────────────────────────────────
 def generate():
-    print("🪔 Generating invitation card...")
+    print("[*] Generating high-clarity invitation card...")
 
     img  = make_bg()
     draw = ImageDraw.Draw(img)
 
     # Fonts
-    f_xl   = load_serif(82)
-    f_lg   = load_serif(52)
-    f_md   = load_serif(34)
-    f_sm   = load_sans(22)
-    f_xs   = load_sans(18)
+    f_shloka = load_indic(30)
+    f_om     = load_indic(38)
+    f_xl     = load_serif(68)
+    f_lg     = load_serif(44)
+    f_md     = load_serif(30)
+    f_sm     = load_sans(24)
+    f_xs     = load_sans(20)
+    f_link   = load_sans(24)
 
-    # Outer border
-    m = 30
+    # Outer decorative borders
+    m = 28
     draw.rectangle([m, m, W-m, H-m], outline=GOLD_DIM, width=1)
     draw.rectangle([m+10, m+10, W-m-10, H-m-10], outline=(*GOLD_DIM, 60), width=1)
 
     # Corner ornaments
-    s = 55
+    s = 50
     corner(draw, m+10,   m+10,   s, 'tl')
     corner(draw, W-m-10, m+10,   s, 'tr')
     corner(draw, m+10,   H-m-10, s, 'bl')
     corner(draw, W-m-10, H-m-10, s, 'br')
 
-    y = 90
+    y = 65
 
-    # ॐ Sacred Symbol
-    centered(draw, y, "卐   ॐ   卐", load_serif(44), GOLD)
-    y += 75
+    # 1. Sacred Header Invocation
+    f_shloka = load_serif(22)
+    centered(draw, y, "✦   O M   S R I   G A N E S H A Y A   N A M A H A   ✦", f_shloka, GOLD_LIGHT)
+    y += 40
 
-    # YOU ARE INVITED
+    # Sacred Swastik & Om Emblem (Flanked by geometric Swastikas)
+    f_om = load_indic(42)
+    centered(draw, y, "ॐ", f_om, GOLD)
+    draw_swastika(draw, W // 2 - 76, y + 20, size=24, color=GOLD, width=2)
+    draw_swastika(draw, W // 2 + 76, y + 20, size=24, color=GOLD, width=2)
+    y += 62
+
+    # 2. YOU ARE INVITED
     centered(draw, y, "Y O U   A R E   I N V I T E D", f_xs, GOLD)
-    y += 32
+    y += 30
 
-    gold_line(draw, y, width=460)
-    y += 20
+    gold_line(draw, y, width=440)
+    y += 22
 
-    # HOUSEWARMING CEREMONY
+    # 3. HOUSEWARMING CEREMONY
     h = centered(draw, y, "H O U S E W A R M I N G", f_sm, GOLD_LIGHT)
     y += h + 8
     h = centered(draw, y, "C E R E M O N Y", f_sm, GOLD_LIGHT)
-    y += h + 36
+    y += h + 28
 
     # Diamond row
     for dx in [-72, -36, 0, 36, 72]:
         diamond(draw, W//2 + dx, y + 6, 5 if dx != 0 else 8)
-    y += 28
+    y += 26
 
-    # Family name — two lines
+    # 4. Family Name
     words = FAMILY_NAME.split()
     mid   = len(words) // 2
     h = centered(draw, y, " ".join(words[:mid]), f_xl, WHITE)
-    y += h + 10
+    y += h + 8
     h = centered(draw, y, " ".join(words[mid:]), f_xl, WHITE)
-    y += h + 50
-
-    gold_line(draw, y, width=380)
-    y += 36
-
-    # Scan instruction
-    h = centered(draw, y, "Scan to view the full invitation", f_md, WHITE_DIM)
     y += h + 32
 
-    # Down arrow
-    cx    = W // 2
-    aw, ah = 20, 40
-    draw.rectangle([cx-3, y, cx+3, y+ah-12], fill=GOLD)
-    draw.polygon([(cx-aw, y+ah-14), (cx+aw, y+ah-14), (cx, y+ah+6)], fill=GOLD)
-    y += ah + 24
+    # Event date
+    centered(draw, y, f"31 August 2026 · 3:00 AM", f_md, GOLD_LIGHT)
+    y += 44
 
-    # QR code with gold frame
-    qr_size    = 360
-    qr_pad     = 12
-    qr_total   = qr_size + qr_pad * 2
-    qr_img     = make_qr(WEBSITE_URL, qr_size)
+    gold_line(draw, y, width=380)
+    y += 28
+
+    # 5. Scan & Visit Instruction
+    h = centered(draw, y, "Scan to view full invitation & location", f_md, WHITE_DIM)
+    y += h + 24
+
+    # 6. Optimized Large QR Code (400x400 with pristine white quiet zone)
+    qr_size  = 400
+    qr_pad   = 16
+    qr_total = qr_size + qr_pad * 2
+    qr_img   = make_optimized_qr(WEBSITE_URL, qr_size)
 
     # Gold-bordered QR box
-    qr_box = Image.new("RGB", (qr_total, qr_total), (50, 40, 10))
-    inner  = Image.new("RGB", (qr_size + 4, qr_size + 4), (245, 235, 195))
-    inner.paste(qr_img, (2, 2))
-    qr_box.paste(inner, (qr_pad - 2, qr_pad - 2))
+    qr_box = Image.new("RGB", (qr_total, qr_total), (255, 255, 255))
+    qr_box.paste(qr_img, (qr_pad, qr_pad))
 
-    # Tiny corners on QR box
+    # Add elegant gold outline to the QR frame
     qd = ImageDraw.Draw(qr_box)
-    cs = 18
+    qd.rectangle([0, 0, qr_total-1, qr_total-1], outline=GOLD, width=2)
+    cs = 16
     corner(qd, 4,          4,          cs, 'tl')
     corner(qd, qr_total-4, 4,          cs, 'tr')
     corner(qd, 4,          qr_total-4, cs, 'bl')
@@ -218,351 +296,34 @@ def generate():
 
     qr_x = (W - qr_total) // 2
     img.paste(qr_box, (qr_x, y))
-    y += qr_total + 18
+    y += qr_total + 20
 
-    # Bottom emblem
-    centered(draw, y, "卐   ✦   ॐ   ✦   卐", load_serif(26), GOLD_DIM)
+    # 7. Text Link (Direct URL for typing or tapping)
+    clean_url_display = WEBSITE_URL.replace("https://", "")
+    centered(draw, y, f"Or visit: {clean_url_display}", f_link, GOLD_LIGHT)
+    y += 38
 
-    img.save(OUTPUT_FILE, "PNG")
-    print(f"✅ Done! → {OUTPUT_FILE}  ({W}×{H}px)")
-    print(f"   QR points to: {WEBSITE_URL}")
+    # 8. Bottom blessing
+    centered(draw, y, "•   ॐ   •", load_indic(26), GOLD_DIM)
+    draw_swastika(draw, W // 2 - 64, y + 14, size=18, color=GOLD_DIM, width=2)
+    draw_swastika(draw, W // 2 + 64, y + 14, size=18, color=GOLD_DIM, width=2)
+    y += 36
+    centered(draw, y, "With Blessings & Warm Wishes", f_xs, WHITE_FAINT)
+
+    # Save Ultra-HD Output
+    img.save(OUTPUT_FILE, "PNG", quality=98)
+    print(f"[OK] Card saved successfully -> {OUTPUT_FILE} ({W}x{H}px)")
+    print(f"[OK] Encoded URL: {WEBSITE_URL}")
+    print("\n" + "=" * 64)
+    print("WHATSAPP SHARING TEMPLATE (Copy & send this message):")
+    print("=" * 64)
+    print("Namaste! You are cordially invited to celebrate our new home.")
+    print("\n*Vanukuri Veena Damodar Reddy Family — Housewarming Ceremony*")
+    print("Date: 31 August 2026 (Monday)")
+    print("Auspicious Muhurtham: 3:00 AM")
+    print("\nClick below to view ceremonial invitation, location & photos:")
+    print(f"{WEBSITE_URL}")
+    print("=" * 64 + "\n")
 
 if __name__ == "__main__":
     generate()
-
-
-# ─────────────────────────────────────────────────────────────
-#  DESIGN TOKENS
-# ─────────────────────────────────────────────────────────────
-W, H          = 1080, 1620      # portrait — perfect for WhatsApp sharing
-
-# Colors
-BG_TOP        = (15,  28,  22)  # deep emerald
-BG_BOTTOM     = (8,   15,  12)  # near black
-GOLD          = (212, 175, 55)
-GOLD_LIGHT    = (240, 210, 120)
-GOLD_DIM      = (160, 130, 40)
-GOLD_PALE     = (240, 225, 170)
-WHITE         = (255, 255, 255)
-WHITE_DIM     = (220, 215, 200)
-WHITE_FAINT   = (170, 160, 140)
-GREEN_MID     = (44,  74,  62)
-MARIGOLD      = (224, 123, 57)
-
-# ─────────────────────────────────────────────────────────────
-#  FONT LOADER — falls back gracefully
-# ─────────────────────────────────────────────────────────────
-def load_font(size, bold=False):
-    """Try system fonts, fall back to default."""
-    candidates = []
-    if bold:
-        candidates = [
-            "C:/Windows/Fonts/georgia.ttf",
-            "C:/Windows/Fonts/times.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf",
-            "/System/Library/Fonts/Times New Roman Bold.ttf",
-        ]
-    else:
-        candidates = [
-            "C:/Windows/Fonts/georgia.ttf",
-            "C:/Windows/Fonts/times.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf",
-            "/System/Library/Fonts/Times New Roman.ttf",
-        ]
-    for path in candidates:
-        if os.path.exists(path):
-            try:
-                return ImageFont.truetype(path, size)
-            except Exception:
-                pass
-    return ImageFont.load_default()
-
-def load_sans(size):
-    candidates = [
-        "C:/Windows/Fonts/segoeui.ttf",
-        "C:/Windows/Fonts/arial.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-        "/System/Library/Fonts/Helvetica.ttc",
-    ]
-    for path in candidates:
-        if os.path.exists(path):
-            try:
-                return ImageFont.truetype(path, size)
-            except Exception:
-                pass
-    return ImageFont.load_default()
-
-# ─────────────────────────────────────────────────────────────
-#  HELPERS
-# ─────────────────────────────────────────────────────────────
-def centered_text(draw, y, text, font, color, width=W):
-    bbox = draw.textbbox((0, 0), text, font=font)
-    tw = bbox[2] - bbox[0]
-    draw.text(((width - tw) // 2, y), text, font=font, fill=color)
-    return bbox[3] - bbox[1]  # return height
-
-def draw_gold_line(draw, y, width=320, cx=W//2, thickness=1):
-    x0 = cx - width // 2
-    x1 = cx + width // 2
-    # gradient-like line using segments
-    steps = 60
-    for i in range(steps):
-        t = i / steps
-        alpha = int(255 * (1 - abs(t - 0.5) * 2))
-        seg_x = x0 + int((x1 - x0) * t)
-        seg_w = max(1, (x1 - x0) // steps + 1)
-        col = (*GOLD, alpha)
-        draw.rectangle([seg_x, y, seg_x + seg_w, y + thickness], fill=GOLD if t > 0.1 and t < 0.9 else GOLD_DIM)
-
-def draw_corner_ornament(draw, x, y, size, direction):
-    """Draw an L-shaped gold corner at (x,y). direction: 'tl','tr','bl','br'"""
-    t = 2
-    s = size
-    col = GOLD_DIM
-    if direction == 'tl':
-        draw.rectangle([x,   y,   x+s, y+t], fill=col)
-        draw.rectangle([x,   y,   x+t, y+s], fill=col)
-    elif direction == 'tr':
-        draw.rectangle([x-s, y,   x,   y+t], fill=col)
-        draw.rectangle([x-t, y,   x,   y+s], fill=col)
-    elif direction == 'bl':
-        draw.rectangle([x,   y-s, x+t, y],   fill=col)
-        draw.rectangle([x,   y-t, x+s, y],   fill=col)
-    elif direction == 'br':
-        draw.rectangle([x-t, y-s, x,   y],   fill=col)
-        draw.rectangle([x-s, y-t, x,   y],   fill=col)
-
-def draw_dot_row(draw, y, count=7, cx=W//2, spacing=18):
-    x0 = cx - (count // 2) * spacing
-    for i in range(count):
-        x = x0 + i * spacing
-        r = 2
-        alpha_factor = 1.0 - abs(i - count // 2) / (count // 2 + 1)
-        col = tuple(int(c * alpha_factor) for c in GOLD_DIM) if alpha_factor < 0.5 else GOLD_DIM
-        draw.ellipse([x - r, y - r, x + r, y + r], fill=GOLD if alpha_factor > 0.6 else GOLD_DIM)
-
-def draw_diamond(draw, cx, cy, size=8):
-    points = [(cx, cy - size), (cx + size, cy), (cx, cy + size), (cx - size, cy)]
-    draw.polygon(points, fill=GOLD)
-
-# ─────────────────────────────────────────────────────────────
-#  QR CODE GENERATOR
-# ─────────────────────────────────────────────────────────────
-def make_qr(url, qr_size=340):
-    qr = qrcode.QRCode(
-        version=3,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
-        box_size=10,
-        border=2,
-    )
-    qr.add_data(url)
-    qr.make(fit=True)
-
-    # Dark green on pale gold — matches the theme
-    qr_img = qr.make_image(
-        fill_color=(15, 28, 22),
-        back_color=(245, 235, 195)
-    ).convert("RGB")
-
-    qr_img = qr_img.resize((qr_size, qr_size), Image.LANCZOS)
-    return qr_img
-
-# ─────────────────────────────────────────────────────────────
-#  BACKGROUND — deep emerald gradient
-# ─────────────────────────────────────────────────────────────
-def make_background():
-    img = Image.new("RGB", (W, H), BG_TOP)
-    draw = ImageDraw.Draw(img)
-
-    # Vertical gradient — top to bottom
-    for y in range(H):
-        t = y / H
-        r = int(BG_TOP[0] + (BG_BOTTOM[0] - BG_TOP[0]) * t)
-        g = int(BG_TOP[1] + (BG_BOTTOM[1] - BG_TOP[1]) * t)
-        b = int(BG_TOP[2] + (BG_BOTTOM[2] - BG_TOP[2]) * t)
-        draw.line([(0, y), (W, y)], fill=(r, g, b))
-
-    # Subtle warm glow at top center
-    for r_step in range(300, 0, -1):
-        alpha = int(18 * (1 - r_step / 300))
-        col = (
-            min(255, BG_TOP[0] + 30),
-            min(255, BG_TOP[1] + 15),
-            min(255, BG_TOP[2] + 8),
-        )
-        draw.ellipse(
-            [W//2 - r_step, -r_step//2, W//2 + r_step, r_step],
-            fill=col
-        )
-
-    return img
-
-# ─────────────────────────────────────────────────────────────
-#  MAIN CARD DRAW
-# ─────────────────────────────────────────────────────────────
-def generate_card():
-    print("🪔 Generating invitation card...")
-
-    img  = make_background()
-    draw = ImageDraw.Draw(img)
-
-    # ── Fonts
-    f_script_xl  = load_font(88, bold=False)   # ceremony name
-    f_script_lg  = load_font(54)               # family name
-    f_serif_md   = load_font(36)               # date/time
-    f_serif_sm   = load_font(28)               # address
-    f_sans_xs    = load_sans(22)               # small labels
-    f_sans_sm    = load_sans(26)               # scan label
-    f_sans_md    = load_sans(30)               # section labels
-    f_sans_lg    = load_sans(38)               # YOU ARE INVITED
-
-    # ── OUTER BORDER
-    margin = 28
-    bw     = 1
-    draw.rectangle([margin, margin, W-margin, H-margin], outline=GOLD_DIM, width=bw)
-    # inner border
-    margin2 = 38
-    draw.rectangle([margin2, margin2, W-margin2, H-margin2], outline=(*GOLD_DIM, 80), width=1)
-
-    # ── CORNER ORNAMENTS (outer)
-    cs = 52
-    draw_corner_ornament(draw, margin+8,   margin+8,   cs, 'tl')
-    draw_corner_ornament(draw, W-margin-8, margin+8,   cs, 'tr')
-    draw_corner_ornament(draw, margin+8,   H-margin-8, cs, 'bl')
-    draw_corner_ornament(draw, W-margin-8, H-margin-8, cs, 'br')
-
-    y = 72
-
-    # ── SACRED EMBLEM
-    diya_font = load_font(44)
-    centered_text(draw, y, "卐   ॐ   卐", diya_font, GOLD)
-    y += 65
-
-    # ── YOU ARE INVITED
-    centered_text(draw, y, "Y O U   A R E   I N V I T E D", f_sans_xs, GOLD)
-    y += 34
-
-    # ── Top gold line
-    draw_gold_line(draw, y, width=420)
-    y += 18
-
-    # ── HOUSEWARMING
-    h = centered_text(draw, y, CEREMONY.upper(), f_sans_md, GOLD_LIGHT)
-    y += h + 14
-
-    # ── dot ornament
-    draw_dot_row(draw, y, count=9)
-    y += 24
-
-    # ── FAMILY NAME (large serif)
-    # Split into two lines if long
-    words = FAMILY_NAME.split()
-    mid = len(words) // 2
-    line1 = " ".join(words[:mid])
-    line2 = " ".join(words[mid:])
-    h1 = centered_text(draw, y, line1, f_script_xl, WHITE)
-    y += h1 + 8
-    h2 = centered_text(draw, y, line2, f_script_xl, WHITE)
-    y += h2 + 28
-
-    # ── Marigold divider diamond row
-    for dx in [-60, -30, 0, 30, 60]:
-        draw_diamond(draw, W//2 + dx, y + 8, size=6 if dx == 0 else 4)
-    y += 32
-
-    # ── SECTION LABEL: THE DAY
-    centered_text(draw, y, "— THE DAY —", f_sans_xs, GOLD_DIM)
-    y += 34
-
-    # ── DATE
-    h = centered_text(draw, y, DATE_LINE, f_serif_md, GOLD_LIGHT)
-    y += h + 10
-
-    # ── TIME
-    h = centered_text(draw, y, TIME_LINE, f_serif_sm, WHITE_DIM)
-    y += h + 32
-
-    # ── Thin line
-    draw_gold_line(draw, y, width=260)
-    y += 24
-
-    # ── SECTION LABEL: VENUE
-    centered_text(draw, y, "— VENUE —", f_sans_xs, GOLD_DIM)
-    y += 34
-
-    # ── ADDRESS LINES
-    h = centered_text(draw, y, ADDRESS_LINE1, f_serif_sm, WHITE_DIM)
-    y += h + 6
-    h = centered_text(draw, y, ADDRESS_LINE2, f_serif_sm, WHITE_DIM)
-    y += h + 6
-    h = centered_text(draw, y, ADDRESS_LINE3, f_serif_sm, WHITE_FAINT)
-    y += h + 36
-
-    # ── Bottom flourish line
-    draw_gold_line(draw, y, width=500)
-    y += 26
-
-    # ── SCAN SECTION
-    centered_text(draw, y, "SCAN TO VIEW INVITATION", f_sans_xs, GOLD)
-    y += 28
-
-    # ── DOWN ARROW
-    arrow_cx = W // 2
-    arrow_y  = y
-    arrow_w  = 18
-    arrow_h  = 28
-    # shaft
-    draw.rectangle([arrow_cx - 3, arrow_y, arrow_cx + 3, arrow_y + arrow_h - 10], fill=GOLD)
-    # arrowhead
-    draw.polygon([
-        (arrow_cx - arrow_w, arrow_y + arrow_h - 14),
-        (arrow_cx + arrow_w, arrow_y + arrow_h - 14),
-        (arrow_cx,           arrow_y + arrow_h + 4),
-    ], fill=GOLD)
-    y += arrow_h + 18
-
-    # ── QR CODE
-    qr_size = 320
-    qr_img  = make_qr(WEBSITE_URL, qr_size)
-
-    # Gold border around QR
-    qr_border = 10
-    qr_total  = qr_size + qr_border * 2
-    qr_bg     = Image.new("RGB", (qr_total, qr_total), GOLD_DIM)
-    qr_bg.paste(qr_img, (qr_border, qr_border))
-
-    # Add corner ornaments on QR box
-    qr_draw = ImageDraw.Draw(qr_bg)
-    co = 16
-    draw_corner_ornament(qr_draw, 4,          4,          co, 'tl')
-    draw_corner_ornament(qr_draw, qr_total-4, 4,          co, 'tr')
-    draw_corner_ornament(qr_draw, 4,          qr_total-4, co, 'bl')
-    draw_corner_ornament(qr_draw, qr_total-4, qr_total-4, co, 'br')
-
-    qr_x = (W - qr_total) // 2
-    img.paste(qr_bg, (qr_x, y))
-    y += qr_total + 20
-
-    # ── URL label below QR
-    centered_text(draw, y, WEBSITE_URL, f_sans_xs, GOLD_DIM)
-    y += 28
-
-    # ── Bottom emblem row
-    centered_text(draw, y, "卐  ✦  ॐ  ✦  卐", load_font(26), GOLD_DIM)
-    y += 48
-
-    # ── Footer blessing
-    centered_text(draw, y, "With Blessings & Warm Wishes", f_sans_xs, WHITE_FAINT)
-
-    # ── Save
-    img = img.convert("RGB")
-    img.save(OUTPUT_FILE, "PNG", quality=95)
-    print(f"✅ Saved: {OUTPUT_FILE}")
-    print(f"   Size: {W}x{H}px — perfect for WhatsApp sharing")
-    print(f"   QR points to: {WEBSITE_URL}")
-
-# ─────────────────────────────────────────────────────────────
-#  RUN
-# ─────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    generate_card()
