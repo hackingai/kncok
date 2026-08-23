@@ -475,13 +475,16 @@
   function hookConfigSave() {
     if (!window.KnockConfig || !isAdmin) return;
 
+    // Prevent double-hooking
+    if (window.KnockConfig._firebaseHooked) return;
+    window.KnockConfig._firebaseHooked = true;
+
     var originalSave = window.KnockConfig.save;
     window.KnockConfig.save = function (newConfig) {
       var result = originalSave.call(window.KnockConfig, newConfig);
-      // Push to Firebase after local save
-      if (db) {
-        setTimeout(function () { pushConfigToFirebase(result); }, 50);
-      }
+      // Push to Firebase — db may not be ready yet, that's okay
+      // pushConfigToFirebase checks for db internally
+      pushConfigToFirebase(result);
       return result;
     };
   }
@@ -492,12 +495,22 @@
   function init() {
     detectPageType();
 
+    // Hook config save immediately — before Firebase even connects
+    // so no admin action is ever missed
+    if (isAdmin) {
+      hookConfigSave();
+    }
+
     function run() {
       initFirebase();
-      if (isAdmin && db) {
-        hookConfigSave();
-        // Small delay to let admin dashboard DOM render first
-        setTimeout(listenForAnalyticsOnAdmin, 800);
+      if (isAdmin) {
+        // Wait for Firebase to connect then start analytics listener
+        var waitForDb = setInterval(function () {
+          if (db) {
+            clearInterval(waitForDb);
+            setTimeout(listenForAnalyticsOnAdmin, 500);
+          }
+        }, 200);
       }
     }
 
