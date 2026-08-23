@@ -91,12 +91,12 @@
       }
       if (galleryDivider) galleryDivider.style.display = 'flex';
 
-      // Update card label with item count
+      // Update card label
       if (galleryCardVal) {
-        galleryCardVal.textContent = items.length > 0 ? (items.length + ' Moments') : 'Photos & Videos';
+        galleryCardVal.textContent = config.galleryHeading || 'Event Moments & Photos';
       }
       if (galleryCardSub) {
-        galleryCardSub.textContent = items.length > 0 ? 'Tap to View ➔' : 'Coming Soon';
+        galleryCardSub.textContent = config.galleryAlbumUrl ? 'Tap to View in Google Photos ➔' : 'Coming Soon';
       }
     } else {
       // Auto-adjust back to original size
@@ -519,13 +519,21 @@
     fsViewport = document.getElementById('fs-viewport');
     fsMediaWrap = document.getElementById('fs-media-wrap');
 
-    // Click Photos & Videos Card -> Open Gallery Grid
+    // Click Photos card → open Google Photos album in new tab
     if (galleryDetailCard) {
-      galleryDetailCard.addEventListener('click', openGalleryGrid);
+      galleryDetailCard.addEventListener('click', function () {
+        var config = window.KnockConfig ? window.KnockConfig.get() : {};
+        var url = config.galleryAlbumUrl || '';
+        if (url) {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      });
       galleryDetailCard.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          openGalleryGrid();
+          var config = window.KnockConfig ? window.KnockConfig.get() : {};
+          var url = config.galleryAlbumUrl || '';
+          if (url) window.open(url, '_blank', 'noopener,noreferrer');
         }
       });
     }

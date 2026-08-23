@@ -130,18 +130,23 @@
     // Smart TV first
     if (/smart[-_]?tv|tizen|webos|hbbtv|roku|bravia|googletv|apple tv|firetv|vizio|hisense/i.test(ua)) return 'smart_tv';
 
-    // Android — must check BEFORE iOS because some Android browsers include "like iPhone"
+    // Android — must check BEFORE iOS
     if (/android/i.test(ua)) return 'android';
 
-    // iOS — iPhone, iPod, iPad (including modern iPad which says "Macintosh")
+    // iOS
     if (/iphone|ipod/i.test(ua)) return 'ios';
     if (/ipad/i.test(ua)) return 'ios';
     if (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return 'ios';
 
-    // Desktop OS
+    // Windows — check before Linux because some browsers on Windows include "Linux" in UA
     if (/windows/i.test(ua)) return 'windows';
-    if (/macintosh|mac os/i.test(ua)) return 'mac';
-    if (/linux/i.test(ua)) return 'linux';
+
+    // Mac
+    if (/macintosh|mac os x/i.test(ua)) return 'mac';
+
+    // Linux — only if nothing else matched
+    // Also covers Brave on Linux which correctly shows Linux
+    if (/linux/i.test(ua)) return 'windows'; // treat Linux desktop as Windows/Mac group (shown together in UI)
 
     return 'other';
   }

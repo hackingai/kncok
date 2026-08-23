@@ -401,42 +401,15 @@
   }
 
   /* ══════════════════════════════════════════════
-     6 · EVENT PHOTOS & VIDEOS GALLERY CONTROLLER
+     6 · EVENT PHOTOS — Google Photos Album Link
   ═══════════════════════════════════════════════ */
-  var GALLERY_STORAGE_KEY = 'knock_gallery_media_v1';
   var galleryToggleCheckbox = document.getElementById('gallery-toggle-checkbox');
-  var galleryStatusBadge = document.getElementById('gallery-status-badge');
-  var galleryHeadingInput = document.getElementById('gallery-heading-input');
-  var saveGalleryHeadingBtn = document.getElementById('save-gallery-heading-btn');
-  var uploadDropzone = document.getElementById('upload-dropzone');
-  var mediaFileInput = document.getElementById('media-file-input');
-  var browseFilesBtn = document.getElementById('browse-files-btn');
-  var mediaUrlInput = document.getElementById('media-url-input');
-  var addUrlBtn = document.getElementById('add-url-btn');
-  var mediaCountBadge = document.getElementById('media-count-badge');
-  var clearGalleryBtn = document.getElementById('clear-gallery-btn');
-  var mediaGalleryGrid = document.getElementById('media-gallery-grid');
-
-  function getGalleryItems() {
-    try {
-      var raw = localStorage.getItem(GALLERY_STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) { }
-    var config = window.KnockConfig ? window.KnockConfig.get() : {};
-    return config.galleryItems || [];
-  }
-
-  function saveGalleryItems(items) {
-    try {
-      localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(items));
-    } catch (e) {
-      console.warn('Could not save gallery items to localStorage:', e);
-    }
-    if (window.KnockConfig) {
-      window.KnockConfig.save({ galleryItems: items });
-    }
-    renderGalleryGrid();
-  }
+  var galleryStatusBadge    = document.getElementById('gallery-status-badge');
+  var galleryHeadingInput   = document.getElementById('gallery-heading-input');
+  var galleryAlbumUrlInput  = document.getElementById('gallery-album-url');
+  var saveGalleryBtn        = document.getElementById('save-gallery-btn');
+  var galleryPreviewHeading = document.getElementById('gallery-preview-heading');
+  var galleryUrlPreview     = document.getElementById('gallery-url-preview');
 
   function updateGalleryBadge(isActive) {
     if (!galleryStatusBadge) return;
@@ -451,299 +424,60 @@
     }
   }
 
-  function compressImageFile(file, maxWidth, maxHeight, quality, callback) {
-    var reader = new FileReader();
-    reader.onload = function (e) {
-      var img = new Image();
-      img.onload = function () {
-        var width = img.width;
-        var height = img.height;
-        var maxW = maxWidth || 1280;
-        var maxH = maxHeight || 1280;
-
-        if (width > maxW || height > maxH) {
-          if (width / height > maxW / maxH) {
-            height = Math.round((height * maxW) / width);
-            width = maxW;
-          } else {
-            width = Math.round((width * maxH) / height);
-            height = maxH;
-          }
-        }
-
-        var canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        var dataUrl = canvas.toDataURL('image/jpeg', quality || 0.82);
-        callback(null, dataUrl);
-      };
-      img.onerror = function () {
-        callback(null, e.target.result);
-      };
-      img.src = e.target.result;
-    };
-    reader.onerror = function (err) {
-      callback(err);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function resolveMediaNames(items) {
-    if (!items || items.length === 0) return [];
-
-    var unNamedCount = 0;
-    items.forEach(function (item) {
-      if (!item.customName || !item.customName.trim()) {
-        unNamedCount++;
-      }
-    });
-
-    var padLength = (unNamedCount > 1000 || items.length > 1000) ? 5 : 4;
-    var autoCounter = 1;
-
-    return items.map(function (item) {
-      if (item.customName && item.customName.trim()) {
-        return {
-          item: item,
-          name: item.customName.trim(),
-          isCustom: true
-        };
-      } else {
-        var numStr = String(autoCounter);
-        while (numStr.length < padLength) {
-          numStr = '0' + numStr;
-        }
-        autoCounter++;
-        return {
-          item: item,
-          name: 'vvdh-' + numStr,
-          isCustom: false
-        };
-      }
-    });
-  }
-
-  function renderGalleryGrid() {
-    if (!mediaGalleryGrid) return;
-    var items = getGalleryItems();
-
-    if (mediaCountBadge) {
-      mediaCountBadge.textContent = items.length + ' Item' + (items.length === 1 ? '' : 's');
-    }
-
-    if (items.length === 0) {
-      mediaGalleryGrid.innerHTML = '<div class="media-empty-placeholder">' +
-        '<div style="font-size: 2rem; margin-bottom: 6px;">📷</div>' +
-        '<p style="font-weight: 500; color: var(--color-gold-light); margin-bottom: 4px;">No photos or videos uploaded yet</p>' +
-        '<p style="font-size: 0.78rem;">Upload ceremony photos or videos above to showcase them.</p>' +
-        '</div>';
-      return;
-    }
-
-    var resolvedList = resolveMediaNames(items);
-    var html = '';
-    resolvedList.forEach(function (res) {
-      var item = res.item;
-      var isVideo = item.type === 'video';
-      var mediaTag = isVideo ? '🎥 Video' : '📷 Photo';
-      var displayName = res.isCustom ? res.name : '';
-      var placeholderName = res.name;
-      var mediaThumb = isVideo
-        ? '<video class="media-thumb" src="' + item.src + '" muted playsinline preload="metadata"></video>'
-        : '<img class="media-thumb" src="' + item.src + '" alt="Event moment" loading="lazy" />';
-
-      html += '<div class="media-card" data-id="' + item.id + '">' +
-        '<div class="media-thumb-wrap">' +
-        mediaThumb +
-        '<span class="media-type-tag">' + mediaTag + '</span>' +
-        '</div>' +
-        '<div class="media-card-body">' +
-        '<div class="media-name-wrap">' +
-        '<input type="text" class="media-name-input" data-id="' + item.id + '" value="' + displayName.replace(/"/g, '&quot;') + '" placeholder="' + placeholderName + '" title="Edit photo name or leave blank for ' + placeholderName + '" />' +
-        '</div>' +
-        '<div class="media-card-actions">' +
-        '<button type="button" class="media-delete-btn" data-id="' + item.id + '" title="Delete">🗑️</button>' +
-        '</div>' +
-        '</div>' +
-        '</div>';
-    });
-
-    mediaGalleryGrid.innerHTML = html;
-
-    // Bind rename input listeners
-    var nameInputs = mediaGalleryGrid.querySelectorAll('.media-name-input');
-    nameInputs.forEach(function (inp) {
-      function handleRename() {
-        var id = inp.getAttribute('data-id');
-        var val = (inp.value || '').trim();
-        var currentItems = getGalleryItems();
-        var target = currentItems.find(function (it) { return it.id === id; });
-        if (target) {
-          if (target.customName !== val) {
-            target.customName = val;
-            saveGalleryItems(currentItems);
-            showToast(val ? ('Photo renamed to "' + val + '"') : 'Photo reverted to auto-number.', '🏷️');
-          }
-        }
-      }
-
-      inp.addEventListener('change', handleRename);
-      inp.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          inp.blur();
-        }
-      });
-    });
-
-    // Bind delete listeners
-    var deleteBtns = mediaGalleryGrid.querySelectorAll('.media-delete-btn');
-    deleteBtns.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var id = btn.getAttribute('data-id');
-        var currentItems = getGalleryItems().filter(function (it) { return it.id !== id; });
-        saveGalleryItems(currentItems);
-        showToast('Media item deleted.', '🗑️');
-      });
-    });
-  }
-
-  function handleFilesSelected(files) {
-    if (!files || files.length === 0) return;
-    var currentItems = getGalleryItems();
-    var processedCount = 0;
-    var totalFiles = files.length;
-
-    Array.prototype.forEach.call(files, function (file) {
-      var isVid = file.type && file.type.indexOf('video') !== -1;
-
-      if (isVid) {
-        var vidReader = new FileReader();
-        vidReader.onload = function (e) {
-          currentItems.unshift({
-            id: 'm_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36),
-            type: 'video',
-            src: e.target.result,
-            caption: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-            addedAt: new Date().toISOString()
-          });
-          processedCount++;
-          if (processedCount === totalFiles) {
-            saveGalleryItems(currentItems);
-            showToast(totalFiles + ' media item(s) uploaded successfully!', '📸');
-          }
-        };
-        vidReader.readAsDataURL(file);
-      } else {
-        compressImageFile(file, 1280, 1280, 0.82, function (err, dataUrl) {
-          currentItems.unshift({
-            id: 'm_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36),
-            type: 'image',
-            src: dataUrl || '',
-            caption: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-            addedAt: new Date().toISOString()
-          });
-          processedCount++;
-          if (processedCount === totalFiles) {
-            saveGalleryItems(currentItems);
-            showToast(totalFiles + ' photo(s) uploaded successfully!', '📸');
-          }
-        });
-      }
-    });
-  }
-
   function initGalleryControls() {
     var config = window.KnockConfig ? window.KnockConfig.get() : {};
 
     if (galleryToggleCheckbox) {
       galleryToggleCheckbox.checked = config.galleryActive === true;
       updateGalleryBadge(galleryToggleCheckbox.checked);
-
       galleryToggleCheckbox.addEventListener('change', function () {
         updateGalleryBadge(galleryToggleCheckbox.checked);
         if (window.KnockConfig) {
           window.KnockConfig.save({ galleryActive: galleryToggleCheckbox.checked });
         }
-        showToast(galleryToggleCheckbox.checked ? 'Event Photos is now ACTIVE on invitation!' : 'Event Photos is now HIDDEN from invitation.', '📸');
+        showToast(galleryToggleCheckbox.checked
+          ? 'Event Photos now ACTIVE on invitation!'
+          : 'Event Photos now HIDDEN from invitation.', '📸');
       });
     }
 
     if (galleryHeadingInput) {
       galleryHeadingInput.value = config.galleryHeading || 'Event Moments & Photos';
+      galleryHeadingInput.addEventListener('input', function () {
+        if (galleryPreviewHeading) galleryPreviewHeading.textContent = galleryHeadingInput.value || 'Event Moments & Photos';
+      });
     }
 
-    if (saveGalleryHeadingBtn) {
-      saveGalleryHeadingBtn.addEventListener('click', function () {
-        var heading = (galleryHeadingInput.value || '').trim() || 'Event Moments & Photos';
+    if (galleryAlbumUrlInput) {
+      galleryAlbumUrlInput.value = config.galleryAlbumUrl || '';
+      if (galleryUrlPreview) {
+        galleryUrlPreview.textContent = config.galleryAlbumUrl || 'No album URL set yet';
+      }
+      galleryAlbumUrlInput.addEventListener('input', function () {
+        if (galleryUrlPreview) {
+          galleryUrlPreview.textContent = galleryAlbumUrlInput.value || 'No album URL set yet';
+        }
+      });
+    }
+
+    if (galleryPreviewHeading) {
+      galleryPreviewHeading.textContent = config.galleryHeading || 'Event Moments & Photos';
+    }
+
+    if (saveGalleryBtn) {
+      saveGalleryBtn.addEventListener('click', function () {
+        var heading = (galleryHeadingInput ? galleryHeadingInput.value.trim() : '') || 'Event Moments & Photos';
+        var albumUrl = galleryAlbumUrlInput ? galleryAlbumUrlInput.value.trim() : '';
         if (window.KnockConfig) {
-          window.KnockConfig.save({ galleryHeading: heading });
+          window.KnockConfig.save({
+            galleryHeading:  heading,
+            galleryAlbumUrl: albumUrl,
+            galleryActive:   galleryToggleCheckbox ? galleryToggleCheckbox.checked : false
+          });
         }
-        showToast('Gallery heading saved!', '✨');
+        showToast('Event Photos settings saved & published!', '📸');
       });
     }
-
-    if (browseFilesBtn && mediaFileInput) {
-      browseFilesBtn.addEventListener('click', function () {
-        mediaFileInput.click();
-      });
-      mediaFileInput.addEventListener('change', function () {
-        handleFilesSelected(mediaFileInput.files);
-        mediaFileInput.value = '';
-      });
-    }
-
-    if (uploadDropzone && mediaFileInput) {
-      uploadDropzone.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        uploadDropzone.classList.add('dragover');
-      });
-      uploadDropzone.addEventListener('dragleave', function () {
-        uploadDropzone.classList.remove('dragover');
-      });
-      uploadDropzone.addEventListener('drop', function (e) {
-        e.preventDefault();
-        uploadDropzone.classList.remove('dragover');
-        if (e.dataTransfer && e.dataTransfer.files) {
-          handleFilesSelected(e.dataTransfer.files);
-        }
-      });
-    }
-
-    if (addUrlBtn && mediaUrlInput) {
-      addUrlBtn.addEventListener('click', function () {
-        var url = (mediaUrlInput.value || '').trim();
-        if (!url) {
-          alert('Please enter an image or video URL.');
-          return;
-        }
-        var isVid = /\.(mp4|webm|mov|ogg)($|\?)/i.test(url);
-        var currentItems = getGalleryItems();
-        currentItems.unshift({
-          id: 'm_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36),
-          type: isVid ? 'video' : 'image',
-          src: url,
-          caption: '',
-          addedAt: new Date().toISOString()
-        });
-        saveGalleryItems(currentItems);
-        mediaUrlInput.value = '';
-        showToast('Media link added successfully!', '🔗');
-      });
-    }
-
-    if (clearGalleryBtn) {
-      clearGalleryBtn.addEventListener('click', function () {
-        if (confirm('Are you sure you want to clear all uploaded photos and videos?')) {
-          saveGalleryItems([]);
-          showToast('All event media cleared.', '🗑️');
-        }
-      });
-    }
-
-    renderGalleryGrid();
   }
 
   /* ══════════════════════════════════════════════

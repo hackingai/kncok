@@ -508,18 +508,18 @@
 
       </section>
 
-      <!-- ── TAB 4: EVENT PHOTOS & VIDEOS GALLERY ── -->
+      <!-- ── TAB 4: EVENT PHOTOS ── -->
       <section id="tab-photos" class="tab-panel" role="tabpanel">
-        
+
         <!-- Master Toggle Banner -->
         <div class="toggle-banner">
           <div class="toggle-info">
-            <h3>Event Photos & Videos Visibility</h3>
-            <p>Control whether the photo & video gallery is shown on the live invitation website. You can still upload, organize, and preview media below even when turned off.</p>
+            <h3>Event Photos Visibility</h3>
+            <p>Show or hide the "View Event Photos" button on the live invitation. Guests tap it to open your Google Photos album.</p>
           </div>
           <div style="display: flex; align-items: center; gap: 16px;">
             <span class="preview-badge" id="gallery-status-badge" style="background: rgba(248, 113, 113, 0.15); color: var(--color-danger);">HIDDEN FROM SITE</span>
-            <label class="switch" aria-label="Toggle Event Photos & Videos">
+            <label class="switch" aria-label="Toggle Event Photos">
               <input type="checkbox" id="gallery-toggle-checkbox" />
               <span class="slider"></span>
             </label>
@@ -527,66 +527,49 @@
         </div>
 
         <div class="dashboard-split">
-          <!-- Upload & Settings Panel -->
+
+          <!-- Google Photos Album Link -->
           <div class="panel-card">
-            <div class="panel-title">
-              <span>Upload Photos & Videos</span>
-              <span style="font-size: 0.85rem; color: var(--color-gold);">📱 💻 Cross-Device</span>
-            </div>
+            <div class="panel-title">Google Photos Album</div>
 
             <div class="form-group">
-              <label class="form-label" for="gallery-heading-input">Gallery Section Heading</label>
+              <label class="form-label" for="gallery-heading-input">Button Label on Invitation</label>
               <input type="text" id="gallery-heading-input" class="form-input" value="Event Moments & Photos" />
+              <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">This is the heading shown on the invitation card button.</div>
             </div>
 
-            <!-- Upload Dropzone (Works on Mobile Camera & Desktop Files) -->
-            <div class="upload-dropzone" id="upload-dropzone">
-              <input type="file" id="media-file-input" multiple accept="image/*,video/*" style="display: none;" />
-              <div class="dropzone-icon">📸</div>
-              <div class="dropzone-title">Tap or Drag Photos & Videos Here</div>
-              <div class="dropzone-sub">Supports JPG, PNG, WebP, GIF, and MP4/WebM video clips from any phone or PC</div>
-              <button type="button" id="browse-files-btn" class="btn-secondary" style="margin-top: 12px;">
-                📁 Choose Photos / Videos
-              </button>
-            </div>
-
-            <!-- Or Add via URL -->
-            <div class="url-upload-wrap" style="margin-top: 20px;">
-              <label class="form-label" for="media-url-input">Or Add Media via Web Link / Cloud URL</label>
-              <div style="display: flex; gap: 8px;">
-                <input type="url" id="media-url-input" class="form-input" placeholder="https://example.com/photo.jpg" />
-                <button type="button" id="add-url-btn" class="btn-secondary" style="white-space: nowrap;">+ Add Link</button>
+            <div class="form-group" style="margin-top: 8px;">
+              <label class="form-label" for="gallery-album-url">Google Photos Album URL</label>
+              <input type="url" id="gallery-album-url" class="form-input" placeholder="https://photos.google.com/share/..." />
+              <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; line-height: 1.7;">
+                📸 How to get the link:<br/>
+                1. Open <strong>Google Photos</strong><br/>
+                2. Create an album with your event photos<br/>
+                3. Click <strong>Share → Create link</strong><br/>
+                4. Copy and paste the link above
               </div>
             </div>
 
-            <div class="action-bar" style="margin-top: 16px;">
-              <button id="save-gallery-heading-btn" class="btn-primary" type="button" style="width: auto;">
-                Save Gallery Heading
+            <div class="action-bar" style="margin-top: 20px;">
+              <button id="save-gallery-btn" class="btn-primary" type="button" style="width: auto;">
+                ✨ Save & Publish
               </button>
             </div>
           </div>
 
-          <!-- Uploaded Media Summary & Live Grid -->
+          <!-- Preview & Status -->
           <div class="panel-card">
-            <div class="panel-title">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span>Uploaded Media</span>
-                <span class="badge-pill" id="media-count-badge">0 Items</span>
+            <div class="panel-title">Preview</div>
+            <div class="timer-preview-card" style="text-align: center; padding: 32px 20px;">
+              <div style="font-size: 2rem; margin-bottom: 12px;">📸</div>
+              <div style="font-family: var(--font-serif); font-size: 1.2rem; color: var(--color-gold-light); margin-bottom: 8px;" id="gallery-preview-heading">Event Moments & Photos</div>
+              <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">Guests tap the card on the invitation to open your album in Google Photos.</div>
+              <div id="gallery-url-preview" style="font-size: 0.78rem; color: var(--text-dim); word-break: break-all; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border-gold);">
+                No album URL set yet
               </div>
-              <button type="button" id="clear-gallery-btn" class="btn-danger-outline" style="font-size: 0.75rem; padding: 4px 10px;">
-                🗑️ Clear All
-              </button>
-            </div>
-            
-            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
-              Your event photos & videos. Add captions or delete items. Ready to sync live.
-            </p>
-
-            <!-- Media Preview Grid Container -->
-            <div id="media-gallery-grid" class="media-gallery-grid">
-              <!-- Dynamically rendered -->
             </div>
           </div>
+
         </div>
 
       </section>

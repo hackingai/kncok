@@ -27,10 +27,10 @@
     // Timer toggle (Active = true, Hidden = false)
     timerActive: true,
     timerHeading: 'Auspicious Muhurtham In',
-    // Event Photos & Videos toggle (Active = true, Hidden = false)
+    // Event Photos toggle and Google Photos album link
     galleryActive: false,
     galleryHeading: 'Event Moments & Photos',
-    galleryItems: [],
+    galleryAlbumUrl: '', // Google Photos / Drive album link
     venueName: 'Vanukuri Family Residence',
     venueAddress: 'FJR7+842, East Gandhi Nagar, Aravind Nagar, Nagaram, Secunderabad, Telangana 500083',
     mapEmbedUrl: '',
