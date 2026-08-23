@@ -98,30 +98,44 @@
   function listenForRemoteConfig() {
     if (!db || isAdmin) return;
 
-    // Load once immediately on page open
+    // Load immediately on page open — apply latest config before guest even sees the page
     db.ref('knock/config').once('value', function (snap) {
       applyRemoteConfig(snap.val());
     });
 
-    // Then poll every 15 seconds silently — no visible change to guest
+    // Poll every 5 seconds — fast enough that changes feel instant, light on bandwidth
     setInterval(function () {
       db.ref('knock/config').once('value', function (snap) {
         applyRemoteConfig(snap.val());
       });
-    }, 15000);
+    }, 5000);
   }
 
   function applyRemoteConfig(remote) {
     if (!remote || !window.KnockConfig) return;
     var str = JSON.stringify(remote);
-    if (lastCfgStr === str) return; // nothing changed
+    if (lastCfgStr === str) return; // nothing changed — skip silently
     lastCfgStr = str;
+
     var local  = window.KnockConfig.get();
     var merged = Object.assign({}, local, remote, {
       adminName: local.adminName,
       adminPass: local.adminPass
     });
+
+    // Save triggers KnockConfig.onUpdate listeners in hydrate.js, timer.js, map.js, gallery.js
     window.KnockConfig.save(merged);
+
+    // Explicitly trigger all modules to re-render in case listeners missed it
+    if (window.KnockTimer && typeof window.KnockTimer.render === 'function') {
+      window.KnockTimer.render();
+    }
+    if (window.InvitationMap && typeof window.InvitationMap.renderMap === 'function') {
+      window.InvitationMap.renderMap();
+    }
+    if (window.KnockGallery && typeof window.KnockGallery.syncGalleryVisibility === 'function') {
+      window.KnockGallery.syncGalleryVisibility();
+    }
   }
 
   /* ══════════════════════════════════════════════════
