@@ -114,8 +114,8 @@
       openingEyebrow: 'మీకు సాదర ఆహ్వానం',
       openingTitle: 'గృహప్రవేశ<br />మహోత్సవం',
       openingFamily: 'వనుకూరు వీణ దామోదర్ రెడ్డి',
-      openingDate: '31 ఆగస్టు 2026',
-      openingTime: 'ఉదయం 3:00 గంటలకు',
+      openingDate: '31 August 2026',
+      openingTime: '3:00 AM',
       openingHint: 'ఆహ్వానాన్ని వీక్షించండి',
 
       // Hero Section
@@ -123,8 +123,8 @@
       heroTitleScript: 'గృహప్రవేశ',
       heroTitleMain: 'మహోత్సవం',
       heroFamily: 'వనుకూరు వీణ దామోదర్ రెడ్డి',
-      heroDatePill: '31 ఆగస్టు 2026',
-      heroTimePill: 'ఉదయం 3:00 గంటలకు',
+      heroDatePill: '31 August 2026',
+      heroTimePill: '3:00 AM',
 
       // House Photo Frame
       photoCaption: 'నూతన గృహం · నూతన అధ్యాయం',
@@ -135,32 +135,32 @@
       welcomeLine2: 'ఆత్మీయులందరితో కలసి జరుపుకునే శుభ సందర్భం.',
       welcomeSub: 'మా ఈ శుభ దినాన మీరు విచ్చేసి,<br />మీ దివ్య ఆశీస్సులను అందించవలసిందిగా ప్రార్థన.',
 
-      // The Day (Details Cards)
-      detailsLabel: 'శుభ ముహూర్తం & వివరాలు',
-      cardDateLabel: 'తేదీ',
-      cardDateVal: '31 ఆగస్టు',
-      cardDateSub: '2026 · సోమవారం',
-      cardTimeLabel: 'ముహూర్తం',
-      cardTimeVal: 'ఉదయం 3:00',
-      cardTimeSub: 'సోమవారం తెల్లవారుజామున',
-      cardGalleryLabel: 'వేడుక క్షణాలు',
-      cardGalleryVal: 'చిత్రాలు & వీడియోలు',
-      cardGallerySub: 'వీక్షించడానికి నొక్కండి ➔',
+      // The Day (Details Cards) — Kept in English as requested
+      detailsLabel: 'The Day',
+      cardDateLabel: 'Date',
+      cardDateVal: '31 August',
+      cardDateSub: '2026 · Monday',
+      cardTimeLabel: 'Time',
+      cardTimeVal: '3:00 AM',
+      cardTimeSub: 'Monday Early Morning',
+      cardGalleryLabel: 'Event Moments',
+      cardGalleryVal: 'Photos & Videos',
+      cardGallerySub: 'Tap to View ➔',
 
-      // Add to Calendar
-      calendarBtn: 'క్యాలెండర్‌కు జోడించండి',
-      calendarAria: 'వనుకూరు వీణ దామోదర్ రెడ్డి గృహప్రవేశ మహోత్సవాన్ని మీ క్యాలెండర్‌కు జోడించండి',
-      calGoogle: 'గూగుల్ క్యాలెండర్ (Google)',
-      calApple: 'ఆపిల్ క్యాలెండర్ (Apple)',
-      calOutlook: 'అవుట్‌లుక్ (Outlook)',
-      calYahoo: 'యాహూ క్యాలెండర్ (Yahoo)',
+      // Add to Calendar — Kept in English as requested
+      calendarBtn: 'Add to Calendar',
+      calendarAria: 'Add Vanukuri Veena Damodar Reddy Housewarming Ceremony to your calendar',
+      calGoogle: 'Google Calendar',
+      calApple: 'Apple Calendar',
+      calOutlook: 'Outlook Calendar',
+      calYahoo: 'Yahoo Calendar',
 
       // Countdown Timer
       timerHeading: 'శుభ ముహూర్తానికి సమయం',
-      timerDays: 'రోజులు',
-      timerHours: 'గంటలు',
-      timerMins: 'నిమిషాలు',
-      timerSecs: 'సెకన్లు',
+      timerDays: 'Days',
+      timerHours: 'Hours',
+      timerMins: 'Mins',
+      timerSecs: 'Secs',
       timerCompleteTitle: 'శుభ ముహూర్త సమయం ఆసన్నమైనది!',
       timerCompleteSub: 'మా నూతన గృహ వేడుకకు సాదర స్వాగతం',
 
@@ -183,7 +183,7 @@
       closingLine2: 'ఆనందంగా వేచి చూస్తున్నాము',
       closingThankYou: 'మా నూతన ప్రారంభంలో భాగస్వామ్యమైనందుకు హృదయపూర్వక ధన్యవాదాలు.',
       closingFamily: 'వనుకూరు వీణ దామోదర్ రెడ్డి',
-      closingDate: '31 ఆగస్టు 2026',
+      closingDate: '31 August 2026',
 
       // Floating Controls & Misc
       fabLabel: 'లొకేషన్',

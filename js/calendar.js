@@ -15,13 +15,8 @@
   function getEventData() {
     var config = window.KnockConfig ? window.KnockConfig.get() : {};
 
-    var isTe = (document.documentElement && document.documentElement.lang === 'te');
-    var title = isTe
-      ? 'వనుకూరు వీణ దామోదర్ రెడ్డి — గృహప్రవేశ మహోత్సవం'
-      : (config.title || 'Vanukuri Veena Damodar Reddy Housewarming Ceremony');
-    var desc  = isTe
-      ? 'వనుకూరు వీణ దామోదర్ రెడ్డి గారి నూతన గృహప్రవేశ మహోత్సవానికి సాదర ఆహ్వానం.'
-      : (config.invitationNote || 'You are cordially invited to celebrate the Vanukuri Veena Damodar Reddy Housewarming Ceremony.');
+    var title = config.title || 'Vanukuri Veena Damodar Reddy Housewarming Ceremony';
+    var desc  = config.invitationNote || 'You are cordially invited to celebrate the Vanukuri Veena Damodar Reddy Housewarming Ceremony.';
     var loc   = config.venueAddress || 'FJR7+842, East Gandhi Nagar, Aravind Nagar, Nagaram, Secunderabad, Telangana 500083';
 
     // Dates: Default 31 August 2026, 03:00 AM IST (UTC+5:30)
