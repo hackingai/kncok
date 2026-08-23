@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" class="ganesha-svg" aria-label="Lord Ganesha">
+  <defs>
+    <!-- Rich Metallic Gold Gradient -->
+    <linearGradient id="ganeshaGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF3B0"/>
+      <stop offset="25%" stop-color="#E5BA4C"/>
+      <stop offset="65%" stop-color="#B8860B"/>
+      <stop offset="90%" stop-color="#8A6008"/>
+      <stop offset="100%" stop-color="#6B4700"/>
+    </linearGradient>
+    
+    <!-- Secondary Bright Gold -->
+    <linearGradient id="ganeshaGoldBright" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF7C8"/>
+      <stop offset="50%" stop-color="#E8C15A"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </linearGradient>
+
+    <!-- Warm Divine Glow Filter -->
+    <filter id="divineGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#D4AF37" flood-opacity="0.45"/>
+    </filter>
+
+    <!-- Sacred Red/Kumkum Gradient -->
+    <linearGradient id="kumkumRed" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF4D4D"/>
+      <stop offset="100%" stop-color="#B71C1C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Halo / Aura (Prabhavali) -->
+  <circle cx="60" cy="58" r="44" fill="none" stroke="url(#ganeshaGold)" stroke-width="0.75" stroke-dasharray="2 3" opacity="0.5"/>
+  <circle cx="60" cy="58" r="41" fill="none" stroke="url(#ganeshaGold)" stroke-width="0.5" opacity="0.3"/>
+
+  <!-- Main Ganesha Body Art in Elegant Traditional Flowing Linework -->
+  <g filter="url(#divineGlow)">
+    
+    <!-- Crown / Mukut -->
+    <path d="M 44 32 C 44 30, 76 30, 76 32 L 74 24 L 68 25 L 64 16 L 60 8 L 56 16 L 52 25 L 46 24 Z" 
+          fill="url(#ganeshaGoldBright)" stroke="url(#ganeshaGold)" stroke-width="0.75" stroke-linejoin="round"/>
+    
+    <!-- Crown Pinnacle Jewel / Kalash -->
+    <circle cx="60" cy="7" r="2.2" fill="url(#ganeshaGoldBright)"/>
+    <path d="M 52 25 C 57 28, 63 28, 68 25" fill="none" stroke="url(#ganeshaGold)" stroke-width="1"/>
+    <circle cx="60" cy="20" r="2" fill="url(#kumkumRed)"/>
+
+    <!-- Left Ear (Viewer's Left - Auspicious Graceful Flare) -->
+    <path d="M 44 32 C 34 32, 21 38, 20 52 C 19 63, 28 69, 36 67 C 33 63, 27 59, 27 51 C 27 43, 35 37, 43 37" 
+          fill="none" stroke="url(#ganeshaGold)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Left Ear Inner Arc -->
+    <path d="M 28 47 C 28 53, 33 57, 37 57" 
+          fill="none" stroke="url(#ganeshaGold)" stroke-width="1.2" stroke-linecap="round" opacity="0.75"/>
+    <circle cx="23" cy="56" r="1.5" fill="url(#ganeshaGoldBright)"/>
+
+    <!-- Right Ear (Viewer's Right) -->
+    <path d="M 76 32 C 86 32, 99 38, 100 52 C 101 63, 92 69, 84 67 C 87 63, 93 59, 93 51 C 93 43, 85 37, 77 37" 
+          fill="none" stroke="url(#ganeshaGold)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Right Ear Inner Arc -->
+    <path d="M 92 47 C 92 53, 87 57, 83 57" 
+          fill="none" stroke="url(#ganeshaGold)" stroke-width="1.2" stroke-linecap="round" opacity="0.75"/>
+    <circle cx="97" cy="56" r="1.5" fill="url(#ganeshaGoldBright)"/>
+
+    <!-- Head Contour & Serene Eyebrow Line -->
+    <path d="M 44 37 C 50 35, 70 35, 76 37" fill="none" stroke="url(#ganeshaGold)" stroke-width="1.8" stroke-linecap="round"/>
+
+    <!-- Sacred Tilak / Trishul on Forehead -->
+    <!-- Chandan Crescent -->
+    <path d="M 52 32 Q 60 36 68 32" fill="none" stroke="url(#ganeshaGoldBright)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M 54 34 Q 60 38 66 34" fill="none" stroke="url(#ganeshaGoldBright)" stroke-width="1.2" stroke-linecap="round"/>
+    <!-- Kumkum Vertical Line & Bindi -->
+    <path d="M 60 27 L 60 36" fill="none" stroke="url(#kumkumRed)" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="60" cy="39" r="1.6" fill="url(#kumkumRed)"/>
+
+    <!-- Divine Eyes -->
+    <path d="M 47 43 Q 51 45 54 43" fill="none" stroke="url(#ganeshaGold)" stroke-width="1.4" stroke-linecap="round"/>
+    <circle cx="51" cy="44" r="0.8" fill="url(#ganeshaGold)"/>
+    <path d="M 73 43 Q 69 45 66 43" fill="none" stroke="url(#ganeshaGold)" stroke-width="1.4" stroke-linecap="round"/>
+    <circle cx="69" cy="44" r="0.8" fill="url(#ganeshaGold)"/>
+
+    <!-- The Holy Trunk (Vakratunda) Sweeping Majestically to the Left (Vamamukhi) -->
+    <path d="M 57 42 C 59 50, 63 60, 64 72 C 65 83, 56 94, 44 94 C 33 94, 27 85, 33 76 C 37 70, 48 71, 48 78 C 48 83, 43 85, 40 82" 
+          fill="none" stroke="url(#ganeshaGold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Trunk Inner Detail Lines -->
+    <path d="M 58 56 Q 62 58 59 62" fill="none" stroke="url(#ganeshaGold)" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+    <path d="M 59 65 Q 63 67 60 71" fill="none" stroke="url(#ganeshaGold)" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+    <path d="M 59 74 Q 61 76 57 79" fill="none" stroke="url(#ganeshaGold)" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+
+    <!-- Sweet Modak (in curve of trunk / left palm) -->
+    <path d="M 28 73 C 27 68, 33 65, 36 68 C 39 71, 37 76, 32 76 Z" 
+          fill="url(#ganeshaGoldBright)" stroke="url(#ganeshaGold)" stroke-width="0.75"/>
+    <circle cx="33" cy="67" r="1" fill="url(#kumkumRed)"/>
+
+    <!-- Ekadanta (Single Right Tusk) -->
+    <path d="M 64 50 L 70 52 L 64 54 Z" fill="url(#ganeshaGoldBright)"/>
+
+    <!-- Left Broken Tusk / Mark -->
+    <path d="M 52 50 L 49 51 L 52 52 Z" fill="url(#ganeshaGoldBright)" opacity="0.7"/>
+
+  </g>
+</svg>
