@@ -271,10 +271,7 @@
 
     list.sort(function(a,b){ return b.date.localeCompare(a.date); });
 
-    // Update KPIs
-    var todayEntry = null;
-    for (var i=0; i<list.length; i++) { if(list[i].date===todayKey){ todayEntry=list[i]; break; } }
-    if (todayEntry) setEl('kpi-today-unique', todayEntry.uniqueVisitors);
+    // Only update kpi-total-views here — kpi-today-unique is owned by rebuildVisitorUI
     setEl('kpi-total-views', totalViews);
 
     // Daily history table
@@ -286,11 +283,11 @@
     }
     var html = '';
     list.forEach(function(item) {
-      var isToday    = item.date === todayKey;
-      var dateLabel  = fmtDate(item.date);
+      var isToday   = item.date === todayKey;
+      var dateLabel = fmtDate(item.date);
       var todayBadge = isToday ? '<span class="badge-pill badge-pill--today" style="margin-left:8px;">Today</span>' : '';
-      var d          = item.devices;
-      var parts      = [];
+      var d = item.devices;
+      var parts = [];
       if(d.mobile)  parts.push('📱 '+d.mobile);
       if(d.desktop) parts.push('💻 '+d.desktop);
       if(d.tablet)  parts.push('📟 '+d.tablet);
