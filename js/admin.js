@@ -150,83 +150,11 @@
   }
 
   function renderDailyHistoryTable() {
-    var tbody = document.getElementById('daily-history-tbody');
-    if (!tbody || !window.KnockAnalytics) return;
-
-    var history = window.KnockAnalytics.getDailyHistory();
-    var todayKey = window.KnockAnalytics.getTodayDateKey();
-
-    if (!history || history.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-dim); padding: 18px;">No daily visitor history recorded yet.</td></tr>';
-      return;
-    }
-
-    var html = '';
-    history.forEach(function (item) {
-      var isToday = item.date === todayKey;
-      var dateLabel = formatDisplayDate(item.date);
-      var todayBadge = isToday ? '<span class="badge-pill badge-pill--today" style="margin-left:8px;">Today</span>' : '';
-
-      var devs = item.devices || { mobile: 0, desktop: 0, tablet: 0, tv: 0 };
-      var devBreakdown = [];
-      if (devs.mobile) devBreakdown.push('📱 ' + devs.mobile);
-      if (devs.desktop) devBreakdown.push('💻 ' + devs.desktop);
-      if (devs.tablet) devBreakdown.push('📟 ' + devs.tablet);
-      if (devs.tv) devBreakdown.push('📺 ' + devs.tv);
-      var devStr = devBreakdown.length > 0 ? devBreakdown.join(' · ') : '<span style="color:var(--text-dim); font-size:0.75rem;">—</span>';
-
-      html += '<tr' + (isToday ? ' class="row-today-highlight"' : '') + '>' +
-        '<td><strong>' + dateLabel + '</strong>' + todayBadge + '</td>' +
-        '<td><span class="visitor-count-highlight">' + (item.uniqueVisitors || 0) + '</span></td>' +
-        '<td>' + (item.totalViews || 0) + '</td>' +
-        '<td>' + devStr + '</td>' +
-        '</tr>';
-    });
-
-    tbody.innerHTML = html;
+    // Owned by firebase-sync.js — reads from Firebase, not localStorage
   }
 
   function renderRecentVisitorsTable(stats) {
-    var tbody = document.getElementById('visitor-log-tbody');
-    if (!tbody) return;
-
-    var visitors = stats.recentVisitors || [];
-    var presence = window.KnockAnalytics ? window.KnockAnalytics.getActivePresence() : { activeVisitorIds: [] };
-    var activeIds = presence.activeVisitorIds || [];
-
-    if (visitors.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-dim); padding: 20px;">No guest visits recorded yet. Open the invitation link in another tab/window to test!</td></tr>';
-      return;
-    }
-
-    var rowsHtml = '';
-    visitors.forEach(function (v) {
-      var devIcon = '💻 Desktop';
-      if (v.device === 'tv') devIcon = '📺 Smart TV';
-      else if (v.device === 'tablet') devIcon = '📟 Tablet';
-      else if (v.device === 'mobile') devIcon = '📱 Mobile';
-
-      var platBadge = '🪟 ' + (v.platform || 'Other');
-      if (v.platform === 'android') platBadge = '🤖 Android';
-      else if (v.platform === 'ios') platBadge = '🍏 iOS';
-      else if (v.platform === 'smart_tv') platBadge = '📺 Smart TV OS';
-
-      var isActive = v.fullId && activeIds.indexOf(v.fullId) !== -1;
-      var statusBadge = isActive
-        ? '<span class="status-live-pill">🟢 Active Now</span>'
-        : '<span class="status-past-pill">⚪ Past</span>';
-
-      rowsHtml += '<tr>' +
-        '<td><code>' + (v.id || 'Guest') + '</code></td>' +
-        '<td><span class="visitor-badge">' + devIcon + '</span></td>' +
-        '<td>' + platBadge + '</td>' +
-        '<td>' + (v.screen || 'Auto') + '</td>' +
-        '<td>' + formatRelativeTime(v.time) + '</td>' +
-        '<td>' + statusBadge + '</td>' +
-        '</tr>';
-    });
-
-    tbody.innerHTML = rowsHtml;
+    // Owned by firebase-sync.js — reads from Firebase, not localStorage
   }
 
   function renderAnalytics() {
@@ -862,6 +790,8 @@
 
   /* ══════════════════════════════════════════════
      9 · REALTIME BROADCAST & POLLING SYNC
+     NOTE: Analytics rendering now owned by firebase-sync.js
+     BroadcastChannel only used for config/card/timer/gallery sync
   ═══════════════════════════════════════════════ */
   var presenceInterval = null;
 
@@ -870,12 +800,15 @@
       var channel = new BroadcastChannel('knock_invitation_channel');
       channel.onmessage = function (e) {
         if (e.data) {
+          // Analytics events — skip, firebase-sync.js handles these
           if (e.data.type === 'ANALYTICS_UPDATED' ||
-            e.data.type === 'PRESENCE_UPDATED' ||
-            e.data.type === 'PRESENCE_HEARTBEAT' ||
-            e.data.type === 'PRESENCE_REMOVED') {
-            renderAnalytics();
-          } else if (e.data.type === 'CONFIG_UPDATED') {
+              e.data.type === 'PRESENCE_UPDATED' ||
+              e.data.type === 'PRESENCE_HEARTBEAT' ||
+              e.data.type === 'PRESENCE_REMOVED') {
+            return; // do nothing — firebase-sync.js owns analytics UI
+          }
+          // Config events — still handled here
+          if (e.data.type === 'CONFIG_UPDATED') {
             initCardForm();
             initTimerControls();
             initGalleryControls();
@@ -886,18 +819,13 @@
   } catch (e) { }
 
   function initDashboard() {
+    // renderAnalytics is now a no-op — firebase-sync.js owns all analytics
+    // Just init the date badge once
     renderAnalytics();
     initTimerControls();
     initCardForm();
     initGalleryControls();
-
-    // Start live polling interval for active presence / real-time guest tracking
-    if (presenceInterval) clearInterval(presenceInterval);
-    presenceInterval = setInterval(function () {
-      if (isAuthenticated()) {
-        renderAnalytics();
-      }
-    }, 2500);
+    // NOTE: No polling interval — firebase-sync.js handles all live updates
   }
 
   function init() {
