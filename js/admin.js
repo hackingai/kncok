@@ -59,7 +59,7 @@
     e.preventDefault();
     var name = (loginNameInput.value || '').trim();
     var pass = (loginPassInput.value || '').trim();
-    var config = window.KnockConfig ? window.KnockConfig.get() : { adminName: 'Admin', adminPass: '3251' };
+    var config = window.KnockConfig ? window.KnockConfig.get() : { adminName: 'Admin', adminPass: '**vanukuri2026**' };
 
     var expectedName = (config.adminName || 'Admin').toLowerCase();
     var expectedPass = config.adminPass || '**vanukuri2026**';
