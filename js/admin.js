@@ -68,7 +68,7 @@
       loginError.style.display = 'none';
       setAuthenticated(true);
       showDashboard();
-      showToast('Welcome back, ' + name + '!', '🪔');
+      showToast('Welcome back, ' + name + '!', 'ॐ');
     } else {
       loginError.style.display = 'block';
       loginCard.classList.remove('login-shake');

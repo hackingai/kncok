@@ -154,7 +154,7 @@
 
     if (currentMediaList.length === 0) {
       galleryGridItems.innerHTML = '<div class="gallery-empty-state">' +
-        '<div class="gallery-empty-icon">🪔</div>' +
+        '<div class="gallery-empty-icon">ॐ</div>' +
         '<h3 class="gallery-empty-title">Photos & Videos</h3>' +
         '<p class="gallery-empty-sub">Memories will appear here soon.</p>' +
         '</div>';
