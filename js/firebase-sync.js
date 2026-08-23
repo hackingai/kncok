@@ -168,9 +168,10 @@
   function startAdminAnalytics() {
     if (!db || !isAdmin) return;
 
-    // Firebase real-time listener — fires the instant any guest heartbeats
+    // Firebase real-time listeners — fire instantly when data changes
+    // These are the ONLY Firebase reads — no polling
     db.ref('knock/visitors').on('value', function (snap) {
-      cachedVisitors = snap.val();
+      cachedVisitors = snap.val() || {};
       rebuildVisitorUI();
     });
 
@@ -178,9 +179,10 @@
       rebuildDailyUI(snap.val());
     });
 
-    // 1-second tick — refreshes Active Now / Past without needing a data change
+    // 1-second tick — ONLY re-renders from cached data, zero Firebase reads
+    // This keeps Active Now / Past status fresh as time passes
     setInterval(function () {
-      if (cachedVisitors) rebuildVisitorUI();
+      rebuildVisitorUI();
     }, 1000);
   }
 
@@ -200,14 +202,17 @@
     var platCounts = { android:0, ios:0, windows:0, mac:0, smart_tv:0, other:0 };
     var rows       = [];
 
+    var todayVisitors = 0;
     Object.keys(visitors).forEach(function(vid) {
       var v = visitors[vid];
       if (!v) return;
       var age      = now - (v.lastSeen || 0);
-      var isActive = age < 15000; // active if heartbeat within 15s
+      var isActive = age < 15000;
       if (isActive) activeNow++;
 
+      // Count ALL visitors who visited today for unique count + device/platform bars
       if (v.date === todayKey) {
+        todayVisitors++;
         if (devCounts.hasOwnProperty(v.device))     devCounts[v.device]++;
         if (platCounts.hasOwnProperty(v.platform))  platCounts[v.platform]++;
       }
@@ -224,8 +229,9 @@
 
     rows.sort(function(a,b){ return new Date(b.time) - new Date(a.time); });
 
-    setEl('kpi-active-now',  activeNow);
-    setEl('kpi-active-tabs', activeNow);
+    setEl('kpi-active-now',   activeNow);
+    setEl('kpi-active-tabs',  activeNow);
+    setEl('kpi-today-unique', todayVisitors);
 
     // Device bars
     var dTotal = (devCounts.mobile + devCounts.desktop + devCounts.tablet + devCounts.tv) || 1;
