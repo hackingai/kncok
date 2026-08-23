@@ -35,7 +35,10 @@
     venueAddress: 'FJR7+842, East Gandhi Nagar, Aravind Nagar, Nagaram, Secunderabad, Telangana 500083',
     mapEmbedUrl: '',
     mapDirectionsUrl: 'https://www.google.com/maps/place/17.4908348,78.6127061/@17.4908348,78.6127061,18z',
-    invitationNote: 'We cordially invite you and your family to grace the auspicious occasion of our Housewarming Ceremony and bless our new home with your presence and warm wishes.',
+    // Bilingual & Language Selector Settings
+    langPromptActive: true, // Pop-up prompt asking guests: Telugu or English
+    defaultLang: 'en',      // Default language if prompt disabled ('en' or 'te')
+    showLangSwitcher: true, // Floating 'తెలుగు | EN' toggle on the invitation
     adminName: 'Admin',
     adminPass: '3251', // Default master password (can be customized in /knock)
     firebaseConfig: null // Optional cloud config

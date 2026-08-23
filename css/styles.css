@@ -1917,4 +1917,280 @@ video.fs-media-element {
   }
 }
 
+  /* ════════════════════════════════════════════════════════════════
+   BILINGUAL & LANGUAGE SELECTION MODAL (i18n)
+   Ceremonial Pop-up for Telugu (తెలుగు) & English selection
+   ════════════════════════════════════════════════════════════════ */
 
+.lang-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s ease;
+}
+
+.lang-modal.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.lang-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 28, 22, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.lang-modal-dialog {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 480px;
+  background: linear-gradient(170deg, #244237 0%, #162E25 100%);
+  border: 1.5px solid rgba(212, 168, 67, 0.45);
+  border-radius: var(--radius-xl);
+  padding: 2.2rem 1.8rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(184, 134, 11, 0.2);
+  transform: scale(0.92) translateY(12px);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lang-modal.is-visible .lang-modal-dialog {
+  transform: scale(1) translateY(0);
+}
+
+.lang-modal-emblem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+  color: var(--color-gold-light);
+  font-size: 1.1rem;
+}
+
+.lang-ganesha-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 10px rgba(212, 168, 67, 0.45));
+}
+
+.lang-modal-shloka {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--color-gold-pale);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
+
+.lang-modal-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 4.5vw, 1.8rem);
+  font-weight: 400;
+  color: #FAF6EE;
+  line-height: 1.25;
+  margin-bottom: 0.4rem;
+}
+
+.lang-modal-sub {
+  font-family: 'Noto Sans Telugu', var(--font-sans);
+  font-size: 0.92rem;
+  color: rgba(250, 246, 238, 0.85);
+  line-height: 1.5;
+  margin-bottom: 1.6rem;
+}
+
+.lang-modal-sub-en {
+  font-size: 0.82rem;
+  color: var(--color-gold-pale);
+  display: block;
+  margin-top: 2px;
+}
+
+.lang-modal-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.lang-choice-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(212, 168, 67, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 0.85rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.lang-choice-card:hover,
+.lang-choice-card:focus-visible {
+  background: rgba(212, 168, 67, 0.15);
+  border-color: var(--color-gold-light);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 168, 67, 0.35);
+}
+
+.lang-choice-card:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.lang-choice-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.4rem;
+  line-height: 1;
+}
+
+.lang-choice-name {
+  font-family: 'Noto Serif Telugu', var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #FAF6EE;
+  margin-bottom: 0.2rem;
+  line-height: 1.2;
+}
+
+.lang-choice-sub {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: rgba(250, 246, 238, 0.75);
+  letter-spacing: 0.02em;
+  margin-bottom: 0.4rem;
+}
+
+.lang-choice-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-gold-pale);
+  background: rgba(212, 168, 67, 0.2);
+  border: 1px solid rgba(212, 168, 67, 0.4);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.lang-modal-footer {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: rgba(250, 246, 238, 0.55);
+  line-height: 1.4;
+  border-top: 1px solid rgba(212, 168, 67, 0.15);
+  padding-top: 0.9rem;
+}
+
+/* ─── Floating Language Switcher Pill ─── */
+.lang-switch-pill {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(36, 66, 55, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(212, 168, 67, 0.5);
+  border-radius: 30px;
+  padding: 6px 14px;
+  color: #FAF6EE;
+  font-family: 'Noto Sans Telugu', var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), 0 0 10px rgba(212, 168, 67, 0.2);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.lang-switch-pill:hover,
+.lang-switch-pill:focus-visible {
+  background: rgba(44, 74, 62, 0.96);
+  border-color: var(--color-gold-light);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35), 0 0 16px rgba(212, 168, 67, 0.4);
+}
+
+.lang-switch-pill:active {
+  transform: scale(0.97);
+}
+
+.lang-pill-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.lang-pill-text {
+  font-family: 'Noto Sans Telugu', var(--font-sans);
+  letter-spacing: 0.03em;
+  color: var(--color-gold-pale);
+}
+
+/* ─── Telugu Typography Adjustments ─── */
+html[lang="te"] .opening-title,
+html[lang="te"] .hero-title-script,
+html[lang="te"] .hero-title-main,
+html[lang="te"] .opening-family,
+html[lang="te"] .hero-family,
+html[lang="te"] .closing-family,
+html[lang="te"] .map-section-title,
+html[lang="te"] .welcome-message,
+html[lang="te"] .closing-line,
+html[lang="te"] .countdown-heading {
+  font-family: 'Noto Serif Telugu', var(--font-serif);
+}
+
+html[lang="te"] .hero-title-script {
+  font-style: normal;
+  font-size: clamp(2rem, 6.5vw, 3rem);
+}
+
+html[lang="te"] .opening-family,
+html[lang="te"] .hero-family,
+html[lang="te"] .closing-family {
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+html[lang="te"] .welcome-message {
+  font-style: normal;
+  line-height: 1.8;
+}
+
+@media (max-width: 480px) {
+  .lang-modal-dialog {
+    padding: 1.6rem 1.2rem;
+  }
+  .lang-modal-choices {
+    gap: 0.65rem;
+  }
+  .lang-choice-card {
+    padding: 1rem 0.5rem;
+  }
+  .lang-choice-name {
+    font-size: 1.15rem;
+  }
+  .lang-switch-pill {
+    top: 12px;
+    right: 12px;
+    padding: 5px 11px;
+    font-size: 0.75rem;
+  }
+}

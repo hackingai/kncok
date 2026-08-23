@@ -103,6 +103,9 @@
       <button class="tab-btn" data-tab="tab-photos" role="tab" aria-selected="false">
         <span>📸</span> Event Photos
       </button>
+      <button class="tab-btn" data-tab="tab-language" role="tab" aria-selected="false">
+        <span>🌐</span> Language & Bilingual
+      </button>
       <button class="tab-btn" data-tab="tab-security" role="tab" aria-selected="false">
         <span>🔐</span> Security & Sync
       </button>
@@ -570,6 +573,80 @@
             </div>
           </div>
 
+        </div>
+
+      </section>
+
+      <!-- ── TAB: LANGUAGE & BILINGUAL SETTINGS ── -->
+      <section id="tab-language" class="tab-panel" role="tabpanel">
+        
+        <div class="toggle-banner">
+          <div class="toggle-info">
+            <h3>Language Selection Pop-up (Telugu / English)</h3>
+            <p>When enabled, guests opening the website will see an auspicious pop-up asking: "Would you like to view in Telugu or English?".</p>
+          </div>
+          <label class="switch" aria-label="Toggle language pop-up">
+            <input type="checkbox" id="lang-toggle-checkbox" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="dashboard-split">
+          <!-- Language Configuration Form -->
+          <div class="panel-card">
+            <div class="panel-title">Bilingual Preferences</div>
+
+            <div class="form-group">
+              <label class="form-label">Default / Fallback Language</label>
+              <div style="display: flex; gap: 20px; margin-top: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-light); font-size: 0.9rem;">
+                  <input type="radio" name="cfg-default-lang" id="cfg-lang-en" value="en" checked /> English
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-light); font-size: 0.9rem;">
+                  <input type="radio" name="cfg-default-lang" id="cfg-lang-te" value="te" /> తెలుగు (Telugu)
+                </label>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">Used when the pop-up prompt is turned off, or before a guest selects their language.</div>
+            </div>
+
+            <div class="form-group" style="margin-top: 18px;">
+              <label class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
+                <span>Show Floating Language Switcher Pill</span>
+                <input type="checkbox" id="cfg-show-switcher" checked style="width: 16px; height: 16px; cursor: pointer;" />
+              </label>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Displays the floating '🌐 తెలుగు / EN' button on the invitation page so guests can toggle languages anytime.</div>
+            </div>
+
+            <div class="action-bar" style="margin-top: 20px;">
+              <button id="save-lang-btn" class="btn-primary" type="button" style="width: auto;">
+                ✨ Save Language Settings
+              </button>
+            </div>
+          </div>
+
+          <!-- Status & Quick Test -->
+          <div class="panel-card">
+            <div class="panel-title">Status & Quick Test</div>
+            <div class="timer-preview-card" style="text-align: center; padding: 24px 20px;">
+              <span class="preview-badge" id="lang-status-badge">POP-UP PROMPT ACTIVE</span>
+              <div style="font-size: 2rem; margin: 12px 0 8px;">🌐 🪔</div>
+              <h3 style="font-family: var(--font-serif); font-size: 1.25rem; color: var(--color-gold-light); margin-bottom: 8px;">
+                Telugu & English Bilingual Ready
+              </h3>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">
+                All ceremonial cards, muhurtham timers, dates, and directions adapt automatically to the guest's choice.
+              </p>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" id="btn-reset-guest-prompt" class="btn-secondary" style="width: 100%; justify-content: center; font-size: 0.82rem;">
+                  🔄 Reset Guest Session (Test Pop-up Again)
+                </button>
+                <a href="index.html" target="_blank" class="btn-primary" style="width: 100%; justify-content: center; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center;">
+                  🚀 Open Live Invitation in New Tab
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
 
       </section>

@@ -91,8 +91,14 @@
   function init() {
     if (window.KnockConfig) {
       applyConfigToDOM(window.KnockConfig.get());
+      if (window.KnockI18n && typeof window.KnockI18n.applyTranslations === 'function') {
+        window.KnockI18n.applyTranslations(window.KnockI18n.getLang());
+      }
       window.KnockConfig.onUpdate(function (updatedConfig) {
         applyConfigToDOM(updatedConfig);
+        if (window.KnockI18n && typeof window.KnockI18n.applyTranslations === 'function') {
+          window.KnockI18n.applyTranslations(window.KnockI18n.getLang());
+        }
       });
     }
   }

@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&family=Great+Vibes&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&family=Great+Vibes&family=Noto+Serif+Telugu:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@300;400;500;600&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 
@@ -65,6 +65,49 @@
 <body>
 
   <!-- ══════════════════════════════════════════════
+       LANGUAGE SELECTION MODAL (Bilingual Prompt)
+       Managed by js/i18n.js & KnockConfig
+  ═══════════════════════════════════════════════ -->
+  <div id="lang-modal" class="lang-modal" role="dialog" aria-modal="true" aria-labelledby="lang-modal-title" style="display: none;">
+    <div class="lang-modal-backdrop"></div>
+    <div class="lang-modal-dialog">
+      <div class="lang-modal-emblem sacred-emblem">
+        <span class="sacred-swastik">卐</span>
+        <div class="lang-ganesha-badge" title="Lord Ganesha">
+          <img src="assets/ganesh_user_gold.svg" alt="Lord Ganesha" width="56" height="56" />
+        </div>
+        <span class="sacred-swastik">卐</span>
+      </div>
+      <div class="lang-modal-shloka">॥ శ్రీ గణేశాయ నమః · श्री गणेशाय नमः ॥</div>
+      <h2 id="lang-modal-title" class="lang-modal-title">Welcome · సాదర స్వాగతం</h2>
+      <p class="lang-modal-sub">
+        దయచేసి మీ భాషను ఎంచుకోండి<br />
+        <span class="lang-modal-sub-en">Please choose your preferred invitation language</span>
+      </p>
+
+      <div class="lang-modal-choices">
+        <button type="button" class="lang-choice-card" id="btn-lang-te" data-set-lang="te" aria-label="View in Telugu (తెలుగు)">
+          <div class="lang-choice-icon">🪔</div>
+          <div class="lang-choice-name">తెలుగు</div>
+          <div class="lang-choice-sub">సాంప్రదాయ ఆహ్వానం</div>
+          <span class="lang-choice-badge">Telugu</span>
+        </button>
+
+        <button type="button" class="lang-choice-card" id="btn-lang-en" data-set-lang="en" aria-label="View in English">
+          <div class="lang-choice-icon">✨</div>
+          <div class="lang-choice-name">English</div>
+          <div class="lang-choice-sub">Ceremonial Invitation</div>
+          <span class="lang-choice-badge">English</span>
+        </button>
+      </div>
+
+      <div class="lang-modal-footer">
+        <span>మీరు తర్వాత కూడా భాషను మార్చుకోవచ్చు · Switch language anytime via the 🌐 button</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
        PETAL CONTAINER — 3D DOM rose petals
        Managed by js/petals.js
   ═══════════════════════════════════════════════ -->
@@ -98,8 +141,13 @@
   </div>
 
   <!-- ══════════════════════════════════════════════
-       FLOATING LOCATION BUTTON
+       FLOATING LANGUAGE SWITCHER & LOCATION BUTTON
   ═══════════════════════════════════════════════ -->
+  <button id="lang-switch-pill" class="lang-switch-pill" type="button" aria-label="Switch Language / భాష మార్చండి" title="Switch Language">
+    <span class="lang-pill-icon" aria-hidden="true">🌐</span>
+    <span class="lang-pill-text" id="lang-pill-text">తెలుగు</span>
+  </button>
+
   <a href="#location" class="fab-location" aria-label="Jump to location section" title="Find our home">
     <span class="fab-icon" aria-hidden="true">📍</span>
     <span class="fab-label">Location</span>
@@ -671,6 +719,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/analytics.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/timer.js"></script>
   <script src="js/hydrate.js"></script>
   <script src="js/animations.js"></script>

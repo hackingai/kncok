@@ -481,7 +481,86 @@
   }
 
   /* ══════════════════════════════════════════════
-     7 · SECURITY & PASSWORD MANAGEMENT
+     7 · BILINGUAL & LANGUAGE SELECTION
+  ═══════════════════════════════════════════════ */
+  var langToggleCheckbox = document.getElementById('lang-toggle-checkbox');
+  var langStatusBadge    = document.getElementById('lang-status-badge');
+  var cfgLangEn          = document.getElementById('cfg-lang-en');
+  var cfgLangTe          = document.getElementById('cfg-lang-te');
+  var cfgShowSwitcher    = document.getElementById('cfg-show-switcher');
+  var saveLangBtn        = document.getElementById('save-lang-btn');
+  var btnResetGuestPrompt = document.getElementById('btn-reset-guest-prompt');
+
+  function updateLangBadge(isActive) {
+    if (!langStatusBadge) return;
+    if (isActive) {
+      langStatusBadge.textContent = 'POP-UP PROMPT ACTIVE';
+      langStatusBadge.style.background = 'rgba(74, 222, 128, 0.15)';
+      langStatusBadge.style.color = 'var(--color-success)';
+    } else {
+      langStatusBadge.textContent = 'PROMPT DISABLED (DIRECT LOAD)';
+      langStatusBadge.style.background = 'rgba(248, 113, 113, 0.15)';
+      langStatusBadge.style.color = 'var(--color-danger)';
+    }
+  }
+
+  function initLanguageControls() {
+    var config = window.KnockConfig ? window.KnockConfig.get() : {};
+
+    if (langToggleCheckbox) {
+      langToggleCheckbox.checked = config.langPromptActive !== false;
+      updateLangBadge(langToggleCheckbox.checked);
+
+      langToggleCheckbox.addEventListener('change', function () {
+        updateLangBadge(langToggleCheckbox.checked);
+        if (window.KnockConfig) {
+          window.KnockConfig.save({ langPromptActive: langToggleCheckbox.checked });
+        }
+        showToast(langToggleCheckbox.checked
+          ? 'Language pop-up is now ACTIVE for guests!'
+          : 'Language pop-up is now DISABLED.', '🌐');
+      });
+    }
+
+    if (cfgLangEn && cfgLangTe) {
+      if (config.defaultLang === 'te') cfgLangTe.checked = true;
+      else cfgLangEn.checked = true;
+    }
+
+    if (cfgShowSwitcher) {
+      cfgShowSwitcher.checked = config.showLangSwitcher !== false;
+    }
+
+    if (saveLangBtn) {
+      saveLangBtn.addEventListener('click', function () {
+        var defaultLang = (cfgLangTe && cfgLangTe.checked) ? 'te' : 'en';
+        var promptActive = langToggleCheckbox ? langToggleCheckbox.checked : true;
+        var showSwitcher = cfgShowSwitcher ? cfgShowSwitcher.checked : true;
+
+        if (window.KnockConfig) {
+          window.KnockConfig.save({
+            langPromptActive: promptActive,
+            defaultLang: defaultLang,
+            showLangSwitcher: showSwitcher
+          });
+        }
+        showToast('Language & Bilingual settings saved!', '🌐');
+      });
+    }
+
+    if (btnResetGuestPrompt) {
+      btnResetGuestPrompt.addEventListener('click', function () {
+        try {
+          sessionStorage.removeItem('knock_invitation_prompted_v1');
+          localStorage.removeItem('knock_invitation_lang_v1');
+        } catch (e) { }
+        showToast('Guest choice reset! Opening the site will show the pop-up.', '🔄');
+      });
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     8 · SECURITY & PASSWORD MANAGEMENT
   ═══════════════════════════════════════════════ */
   var secName = document.getElementById('sec-name');
   var secNewPass = document.getElementById('sec-new-pass');
@@ -510,7 +589,7 @@
   }
 
   /* ══════════════════════════════════════════════
-     8 · TOAST HELPER
+     9 · TOAST HELPER
   ═══════════════════════════════════════════════ */
   var toastTimeout = null;
   function showToast(msg, icon) {
@@ -527,7 +606,7 @@
   }
 
   /* ══════════════════════════════════════════════
-     9 · REALTIME BROADCAST & POLLING SYNC
+     10 · REALTIME BROADCAST & POLLING SYNC
      NOTE: Analytics rendering now owned by firebase-sync.js
      BroadcastChannel only used for config/card/timer/gallery sync
   ═══════════════════════════════════════════════ */
@@ -550,6 +629,7 @@
             initCardForm();
             initTimerControls();
             initGalleryControls();
+            initLanguageControls();
           }
         }
       };
@@ -563,6 +643,7 @@
     initTimerControls();
     initCardForm();
     initGalleryControls();
+    initLanguageControls();
     // NOTE: No polling interval — firebase-sync.js handles all live updates
   }
 

@@ -85,11 +85,32 @@
   function initOverlay() {
     if (!overlay) return;
 
-    // Auto-dismiss after full opening animation (~2.8s)
-    var autoTimer = setTimeout(hideOverlay, 2800);
+    var autoTimer = null;
+    var langModal = document.getElementById('lang-modal');
+
+    function startAutoTimer() {
+      if (!autoTimer && !hasHidden) {
+        autoTimer = setTimeout(hideOverlay, 2800);
+      }
+    }
+
+    // Only start auto-dismiss if language prompt is not showing
+    var config = window.KnockConfig ? window.KnockConfig.get() : {};
+    var isPromptActive = config.langPromptActive !== false && !sessionStorage.getItem('knock_invitation_prompted_v1');
+
+    if (!isPromptActive) {
+      startAutoTimer();
+    }
+
+    // When guest selects their language, begin the ceremonial opening
+    window.addEventListener('knock_lang_changed', function () {
+      if (!hasHidden) {
+        setTimeout(hideOverlay, 2200);
+      }
+    }, { once: true });
 
     function onUserInteraction() {
-      clearTimeout(autoTimer);
+      if (autoTimer) clearTimeout(autoTimer);
       hideOverlay();
     }
 

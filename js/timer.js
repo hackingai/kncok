@@ -113,6 +113,10 @@
         renderTimer();
       });
     }
+
+    window.addEventListener('knock_lang_changed', function () {
+      renderTimer();
+    });
   }
 
   if (document.readyState === 'loading') {
