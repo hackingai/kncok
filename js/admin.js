@@ -173,7 +173,11 @@
   var refreshStatsBtn = document.getElementById('refresh-stats-btn');
   if (refreshStatsBtn) {
     refreshStatsBtn.addEventListener('click', function () {
-      renderAnalytics();
+      // Trigger fresh Firebase reads via KnockSync
+      if (window.KnockSync && window.KnockSync.refreshAnalytics) {
+        window.KnockSync.refreshAnalytics();
+      }
+      renderAnalytics(); // updates date badge
       showToast('Analytics refreshed!', '🔄');
     });
   }

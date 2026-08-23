@@ -405,6 +405,16 @@
   window.KnockSync = {
     push: pushConfigToFirebase,
     isConnected: function() { return db !== null; },
+    refreshAnalytics: function() {
+      if (!db) return;
+      db.ref('knock/visitors').once('value', function(snap) {
+        cachedVisitors = snap.val() || {};
+        rebuildVisitorUI();
+      });
+      db.ref('knock/daily').once('value', function(snap) {
+        rebuildDailyUI(snap.val());
+      });
+    },
     clearAnalytics: function() {
       if (!db) return;
       db.ref('knock/visitors').remove().catch(function(){});
