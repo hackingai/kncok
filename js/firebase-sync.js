@@ -212,19 +212,21 @@
   function listenForAnalyticsSyncNeeds() {
     if (!db || isAdmin) return;
 
-    // When analytics changes locally (visitor tracked), push to Firebase
-    // Use throttle to avoid hammering Firebase on every heartbeat
-    var ANALYTICS_KEY = 'knock_invitation_analytics_v1';
+    // Push immediately on load
+    setTimeout(throttledPushAnalytics, 1000);
 
-    // Watch for localStorage changes to analytics (cross-tab)
+    // Push heartbeat every 8 seconds to keep Active Now alive
+    setInterval(function () {
+      pushAnalyticsToFirebase();
+    }, 8000);
+
+    // Also watch for localStorage analytics changes (cross-tab)
+    var ANALYTICS_KEY = 'knock_invitation_analytics_v1';
     window.addEventListener('storage', function (e) {
       if (e.key === ANALYTICS_KEY) {
         throttledPushAnalytics();
       }
     });
-
-    // Also push once on load (this visit)
-    setTimeout(throttledPushAnalytics, 2000);
   }
 
   function throttledPushAnalytics() {
@@ -306,7 +308,7 @@
         if (!v) return;
 
         var age = now - (v.lastSeen || 0);
-        var isActive = age < 10000; // 10s window for cross-device
+        var isActive = age < 25000; // 25s window — covers 8s heartbeat + network delay
         if (isActive) activeNow++;
 
         if (v.device && deviceCounts.hasOwnProperty(v.device)) {
