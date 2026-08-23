@@ -186,12 +186,18 @@
     }, 1000);
   }
 
+  var lastRowCount = -1; // track when to rebuild table vs just update status
+
   function rebuildVisitorUI() {
     var visitors = cachedVisitors;
     if (!visitors) {
       setEl('kpi-active-now',   '0');
       setEl('kpi-active-tabs',  '0');
-      renderVisitorTable([]);
+      setEl('kpi-today-unique', '0');
+      if (lastRowCount !== 0) {
+        lastRowCount = 0;
+        renderVisitorTable([]);
+      }
       return;
     }
 
@@ -201,24 +207,24 @@
     var devCounts  = { mobile:0, desktop:0, tablet:0, tv:0 };
     var platCounts = { android:0, ios:0, windows:0, mac:0, smart_tv:0, other:0 };
     var rows       = [];
-
     var todayVisitors = 0;
+
     Object.keys(visitors).forEach(function(vid) {
       var v = visitors[vid];
       if (!v) return;
       var age      = now - (v.lastSeen || 0);
-      var isActive = age < 60000; // 60s window — handles Android background tab pausing JS
+      var isActive = age < 60000; // active if heartbeat within 60s
       if (isActive) activeNow++;
 
-      // Count ALL visitors who visited today for unique count + device/platform bars
       if (v.date === todayKey) {
         todayVisitors++;
-        if (devCounts.hasOwnProperty(v.device))     devCounts[v.device]++;
-        if (platCounts.hasOwnProperty(v.platform))  platCounts[v.platform]++;
+        if (devCounts.hasOwnProperty(v.device))    devCounts[v.device]++;
+        if (platCounts.hasOwnProperty(v.platform)) platCounts[v.platform]++;
       }
 
       rows.push({
         id:       vid.slice(0, 10),
+        fullId:   vid,
         device:   v.device   || 'desktop',
         platform: v.platform || 'other',
         screen:   v.screen   || '—',
@@ -229,26 +235,61 @@
 
     rows.sort(function(a,b){ return new Date(b.time) - new Date(a.time); });
 
+    // Always update KPI numbers — lightweight, no flicker
     setEl('kpi-active-now',   activeNow);
     setEl('kpi-active-tabs',  activeNow);
     setEl('kpi-today-unique', todayVisitors);
 
-    // Device bars
+    // Device & platform bars — only when count changed
     var dTotal = (devCounts.mobile + devCounts.desktop + devCounts.tablet + devCounts.tv) || 1;
     renderBar('dev-mobile',  devCounts.mobile,  dTotal);
     renderBar('dev-desktop', devCounts.desktop, dTotal);
     renderBar('dev-tablet',  devCounts.tablet,  dTotal);
     renderBar('dev-tv',      devCounts.tv,      dTotal);
 
-    // Platform bars
     var pOther = (platCounts.windows||0) + (platCounts.mac||0) + (platCounts.other||0);
     var pTotal = (platCounts.android + platCounts.ios + pOther + platCounts.smart_tv) || 1;
-    renderBar('plat-android', platCounts.android,   pTotal);
-    renderBar('plat-ios',     platCounts.ios,        pTotal);
-    renderBar('plat-other',   pOther,                pTotal, pOther);
-    renderBar('plat-tv',      platCounts.smart_tv,   pTotal);
+    renderBar('plat-android', platCounts.android,  pTotal);
+    renderBar('plat-ios',     platCounts.ios,       pTotal);
+    renderBar('plat-other',   pOther,               pTotal, pOther);
+    renderBar('plat-tv',      platCounts.smart_tv,  pTotal);
 
-    renderVisitorTable(rows);
+    // Table: full rebuild ONLY when row count changes (new visitor arrived)
+    // Otherwise just update status badges in-place — zero flicker
+    if (rows.length !== lastRowCount) {
+      lastRowCount = rows.length;
+      renderVisitorTable(rows);
+    } else {
+      // In-place status update — only touch the status cell, nothing else
+      updateVisitorStatusInPlace(rows);
+    }
+  }
+
+  // Updates only the status badge of each row — no table rebuild, no flicker
+  function updateVisitorStatusInPlace(rows) {
+    var tbody = document.getElementById('visitor-log-tbody');
+    if (!tbody) return;
+    var tableRows = tbody.querySelectorAll('tr');
+    rows.forEach(function(v, i) {
+      if (!tableRows[i]) return;
+      var statusCell = tableRows[i].querySelector('td:last-child');
+      if (!statusCell) return;
+      var newStatus = v.isActive
+        ? '<span class="status-live-pill">🟢 Active Now</span>'
+        : '<span class="status-past-pill">⚪ Past</span>';
+      // Only update DOM if status actually changed
+      if (statusCell.innerHTML !== newStatus) {
+        statusCell.innerHTML = newStatus;
+      }
+      // Also update time cell (5th column)
+      var timeCell = tableRows[i].querySelectorAll('td')[4];
+      if (timeCell) {
+        var newTime = fmtTime(v.time);
+        if (timeCell.textContent !== newTime) {
+          timeCell.textContent = newTime;
+        }
+      }
+    });
   }
 
   function rebuildDailyUI(daily) {
