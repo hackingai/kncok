@@ -1,36 +1,16 @@
 /**
- * firebase-sync.js — Cross-Device Cloud Sync for Knock Portal
- * ─────────────────────────────────────────────────────────────
- * Bridges Firebase Realtime Database with KnockConfig and
- * KnockAnalytics so that admin changes on any device instantly
- * appear on all guest phones — no page refresh needed.
- *
- * HOW TO SET UP (one time, ~3 minutes):
- *   1. Go to https://console.firebase.google.com
- *   2. Create a new project (free "Spark" plan is enough)
- *   3. Click "Realtime Database" → Create database → Start in TEST mode
- *   4. Copy your config values into FIREBASE_CONFIG below
- *   5. Deploy — done. Cross-device sync is live.
- *
- * SECURITY (before event day):
- *   In Firebase Console → Realtime Database → Rules, set:
- *   {
- *     "rules": {
- *       "config": { ".read": true, ".write": true },
- *       "analytics": { ".read": true, ".write": true }
- *     }
- *   }
- * ─────────────────────────────────────────────────────────────
+ * firebase-sync.js — Cross-Device Real-Time Sync for Knock Portal
+ * ─────────────────────────────────────────────────────────────────
+ * • Admin changes sync to all guest phones within 15 seconds
+ * • Guest visits appear in admin analytics in real-time
+ * • Active Now updates every 1 second — no manual refresh needed
+ * • Guest heartbeat every 5 seconds — stays Active Now while open
+ * ─────────────────────────────────────────────────────────────────
  */
 
 (function (window) {
   'use strict';
 
-  /* ══════════════════════════════════════════════
-     STEP 1 — PASTE YOUR FIREBASE CONFIG HERE
-     Get this from Firebase Console →
-     Project Settings → Your Apps → SDK setup and configuration
-  ═══════════════════════════════════════════════ */
   var FIREBASE_CONFIG = {
     apiKey:            "AIzaSyCxLcclyUzbHjlT8ZrcvLxqA4r5MAACToM",
     authDomain:        "housewarming-a2f80.firebaseapp.com",
@@ -41,496 +21,375 @@
     appId:             "1:309736789076:web:1d5c3c5eda4afc479f09c1"
   };
 
-  /* ══════════════════════════════════════════════
-     INTERNAL STATE
-  ═══════════════════════════════════════════════ */
-  var db = null;
-  var isConfigured = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
-  var isAdmin = false;
-  var syncStatusEl = null;
-  var lastRemoteConfig = null;
-  var analyticsThrottleTimer = null;
+  var db            = null;
+  var isAdmin       = false;
+  var lastCfgStr    = null;
+  var cachedVisitors = null; // local cache for 1-second UI refresh
 
-  /* ══════════════════════════════════════════════
-     DETECT PAGE TYPE
-  ═══════════════════════════════════════════════ */
+  /* ─── Detect page type ─────────────────────────── */
   function detectPageType() {
-    var path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
+    var path = (window.location.pathname || '').toLowerCase();
     isAdmin = path.indexOf('admin') !== -1 ||
-              (document.getElementById('login-view') !== null);
+              document.getElementById('login-view') !== null;
   }
 
-  /* ══════════════════════════════════════════════
-     UPDATE SYNC STATUS UI (admin only)
-  ═══════════════════════════════════════════════ */
-  function setSyncStatus(text, isLive) {
+  /* ─── Sync status badge (admin only) ─────────────── */
+  function setSyncStatus(text, live) {
     if (!isAdmin) return;
-    if (!syncStatusEl) {
-      syncStatusEl = document.getElementById('sync-status-text');
-    }
-    if (syncStatusEl) {
-      syncStatusEl.textContent = text;
-    }
-    // Also update the status dot color
+    var el  = document.getElementById('sync-status-text');
     var dot = document.querySelector('.status-dot');
+    if (el)  el.textContent = text;
     if (dot) {
-      dot.style.background = isLive ? '' : '#f87171';
-      dot.style.boxShadow = isLive ? '' : '0 0 6px #f87171';
+      dot.style.background  = live ? '' : '#f87171';
+      dot.style.boxShadow   = live ? '' : '0 0 6px #f87171';
     }
   }
 
-  /* ══════════════════════════════════════════════
+  /* ══════════════════════════════════════════════════
      FIREBASE INIT
-  ═══════════════════════════════════════════════ */
+  ══════════════════════════════════════════════════ */
   function initFirebase() {
-    if (!isConfigured) {
-      setSyncStatus('Local Only (Firebase not configured)', false);
-      console.info('[KnockSync] Firebase not configured — running in local-only mode.');
+    if (typeof firebase === 'undefined') {
+      setSyncStatus('Firebase SDK missing', false);
       return;
     }
-
-    try {
-      // Use compat SDK loaded via CDN (see index.html / admin.html script tags)
-      if (typeof firebase === 'undefined') {
-        console.warn('[KnockSync] Firebase SDK not loaded. Add the script tags to your HTML files.');
-        setSyncStatus('Firebase SDK missing', false);
-        return;
-      }
-
-      // Prevent double-init
-      if (!firebase.apps.length) {
-        firebase.initializeApp(FIREBASE_CONFIG);
-      }
-
-      db = firebase.database();
-      setSyncStatus('Connecting…', false);
-
-      // Test connectivity
-      db.ref('.info/connected').on('value', function (snap) {
-        if (snap.val() === true) {
-          setSyncStatus('Live Sync Active ✓', true);
-          if (isAdmin) {
-            // Admin: push current local config to Firebase on connect
-            pushConfigToFirebase();
-          }
-        } else {
-          setSyncStatus('Reconnecting…', false);
-        }
-      });
-
-      listenForRemoteConfig();
-
-      if (!isAdmin) {
-        listenForAnalyticsSyncNeeds();
-      }
-
-    } catch (err) {
-      console.error('[KnockSync] Firebase init error:', err);
-      setSyncStatus('Sync Error — using local', false);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(FIREBASE_CONFIG);
     }
+    db = firebase.database();
+    setSyncStatus('Connecting…', false);
+
+    db.ref('.info/connected').on('value', function (snap) {
+      if (snap.val() === true) {
+        setSyncStatus('Live Sync Active ✓', true);
+        if (isAdmin) pushConfigToFirebase();
+      } else {
+        setSyncStatus('Reconnecting…', false);
+      }
+    });
   }
 
-  /* ══════════════════════════════════════════════
-     PUSH CONFIG TO FIREBASE (admin writes)
-  ═══════════════════════════════════════════════ */
-  function pushConfigToFirebase(config) {
+  /* ══════════════════════════════════════════════════
+     CONFIG SYNC — admin pushes, guests receive
+  ══════════════════════════════════════════════════ */
+  function pushConfigToFirebase(cfg) {
     if (!db || !isAdmin) return;
-
-    var cfg = config || (window.KnockConfig ? window.KnockConfig.get() : null);
-    if (!cfg) return;
-
-    // Don't push admin credentials to Firebase
-    var safeCfg = Object.assign({}, cfg);
-    delete safeCfg.adminName;
-    delete safeCfg.adminPass;
-    delete safeCfg.firebaseConfig;
-
-    db.ref('knock/config').set(safeCfg).catch(function (err) {
-      console.warn('[KnockSync] Failed to push config:', err);
-    });
+    var c = cfg || (window.KnockConfig ? window.KnockConfig.get() : null);
+    if (!c) return;
+    var safe = Object.assign({}, c);
+    delete safe.adminName;
+    delete safe.adminPass;
+    delete safe.firebaseConfig;
+    db.ref('knock/config').set(safe).catch(function(){});
   }
 
-  /* ══════════════════════════════════════════════
-     LISTEN FOR REMOTE CONFIG CHANGES (guest phones receive)
-  ═══════════════════════════════════════════════ */
-  function listenForRemoteConfig() {
-    if (!db) return;
-
-    // Guests: read config ONCE then disconnect to free up the 100 connection limit
-    // This means ~2 seconds connected per guest instead of staying open forever
-    db.ref('knock/config').once('value', function (snap) {
-      var remoteConfig = snap.val();
-      if (!remoteConfig) return;
-
-      var remoteStr = JSON.stringify(remoteConfig);
-      if (lastRemoteConfig === remoteStr) return;
-      lastRemoteConfig = remoteStr;
-
-      if (isAdmin) return;
-
-      // Guest phone: merge remote config into local and trigger DOM update
-      if (window.KnockConfig) {
-        var localCfg = window.KnockConfig.get();
-        var merged = Object.assign({}, localCfg, remoteConfig, {
-          adminName: localCfg.adminName,
-          adminPass: localCfg.adminPass
-        });
-        window.KnockConfig.save(merged);
-      }
-
-      // After initial load, poll every 15 seconds silently in background
-      // Guest never sees a "change" — content just stays current
-      // 1000 devices × every 15s × 14 days = ~48 MB (well within 10 GB free limit)
-      // Simultaneous connections: only 2-5 at any moment (connect → read → disconnect)
-      setInterval(function () {
-        db.ref('knock/config').once('value', function (snap2) {
-          var cfg2 = snap2.val();
-          if (!cfg2) return;
-          var str2 = JSON.stringify(cfg2);
-          if (lastRemoteConfig === str2) return; // nothing changed, do nothing
-          lastRemoteConfig = str2;
-          if (window.KnockConfig) {
-            var local = window.KnockConfig.get();
-            var m = Object.assign({}, local, cfg2, {
-              adminName: local.adminName,
-              adminPass: local.adminPass
-            });
-            window.KnockConfig.save(m); // silently updates DOM — guest sees no flash
-          }
-        });
-      }, 15000); // 15 seconds — fast enough, light enough
-
-    }, function (err) {
-      console.warn('[KnockSync] Config read error:', err);
-    });
-  }
-
-  /* ══════════════════════════════════════════════
-     ANALYTICS SYNC — push from guest phones to Firebase
-     so admin dashboard shows real visitor counts
-  ═══════════════════════════════════════════════ */
-  function listenForAnalyticsSyncNeeds() {
-    if (!db || isAdmin) return;
-
-    // Push immediately on load
-    setTimeout(throttledPushAnalytics, 1000);
-
-    // Push heartbeat every 8 seconds to keep Active Now alive
-    setInterval(function () {
-      pushAnalyticsToFirebase();
-    }, 8000);
-
-    // Also watch for localStorage analytics changes (cross-tab)
-    var ANALYTICS_KEY = 'knock_invitation_analytics_v1';
-    window.addEventListener('storage', function (e) {
-      if (e.key === ANALYTICS_KEY) {
-        throttledPushAnalytics();
-      }
-    });
-  }
-
-  function throttledPushAnalytics() {
-    if (analyticsThrottleTimer) return;
-    analyticsThrottleTimer = setTimeout(function () {
-      analyticsThrottleTimer = null;
-      pushAnalyticsToFirebase();
-    }, 3000); // push at most once every 3s
-  }
-
-  function pushAnalyticsToFirebase() {
-    if (!db || isAdmin || !window.KnockAnalytics) return;
-
-    var stats = window.KnockAnalytics.getStats();
-    var visitorId = null;
-    try {
-      visitorId = localStorage.getItem('knock_visitor_uid_v1');
-    } catch (e) {}
-
-    if (!visitorId) return;
-
-    // Each visitor writes to their own node — no read-modify-write conflicts
-    var payload = {
-      lastSeen: Date.now(),
-      device: window.KnockAnalytics.detectDevice ? window.KnockAnalytics.detectDevice() : 'unknown',
-      platform: window.KnockAnalytics.detectPlatform ? window.KnockAnalytics.detectPlatform() : 'unknown',
-      screen: window.innerWidth + 'x' + window.innerHeight,
-      date: window.KnockAnalytics.getTodayDateKey ? window.KnockAnalytics.getTodayDateKey() : new Date().toISOString().slice(0, 10)
-    };
-
-    db.ref('knock/visitors/' + visitorId).set(payload).catch(function () {});
-
-    // Push aggregated daily stats (written by the visitor owning that day entry)
-    var today = stats.today;
-    if (today && today.date) {
-      db.ref('knock/dailyStats/' + today.date).transaction(function (current) {
-        if (!current) {
-          return {
-            date: today.date,
-            totalViews: today.totalViews || 1,
-            uniqueVisitors: today.uniqueVisitors || 1,
-            devices: today.devices || { mobile: 0, desktop: 0, tablet: 0, tv: 0 }
-          };
-        }
-        // Merge: take max unique visitors and sum total views
-        return {
-          date: today.date,
-          totalViews: Math.max(current.totalViews || 0, today.totalViews || 0),
-          uniqueVisitors: Math.max(current.uniqueVisitors || 0, today.uniqueVisitors || 0),
-          devices: {
-            mobile:  Math.max((current.devices && current.devices.mobile)  || 0, (today.devices && today.devices.mobile)  || 0),
-            desktop: Math.max((current.devices && current.devices.desktop) || 0, (today.devices && today.devices.desktop) || 0),
-            tablet:  Math.max((current.devices && current.devices.tablet)  || 0, (today.devices && today.devices.tablet)  || 0),
-            tv:      Math.max((current.devices && current.devices.tv)      || 0, (today.devices && today.devices.tv)      || 0)
-          }
-        };
-      }).catch(function () {});
-    }
-  }
-
-  /* ══════════════════════════════════════════════
-     ADMIN ANALYTICS READER — pull from Firebase
-  ═══════════════════════════════════════════════ */
-  function listenForAnalyticsOnAdmin() {
-    if (!db || !isAdmin) return;
-
-    // Listen for live visitor presence
-    db.ref('knock/visitors').on('value', function (snap) {
-      var visitors = snap.val();
-      if (!visitors) return;
-
-      var now = Date.now();
-      var activeNow = 0;
-      var deviceCounts = { mobile: 0, desktop: 0, tablet: 0, tv: 0 };
-      var recentList = [];
-
-      Object.keys(visitors).forEach(function (vid) {
-        var v = visitors[vid];
-        if (!v) return;
-
-        var age = now - (v.lastSeen || 0);
-        var isActive = age < 25000; // 25s window — covers 8s heartbeat + network delay
-        if (isActive) activeNow++;
-
-        if (v.device && deviceCounts.hasOwnProperty(v.device)) {
-          deviceCounts[v.device]++;
-        }
-
-        recentList.push({
-          id: vid.slice(0, 10),
-          fullId: vid,
-          time: new Date(v.lastSeen || now).toISOString(),
-          device: v.device || 'desktop',
-          platform: v.platform || 'other',
-          screen: v.screen || 'unknown',
-          isActive: isActive
-        });
-      });
-
-      // Sort newest first
-      recentList.sort(function (a, b) {
-        return new Date(b.time) - new Date(a.time);
-      });
-
-      // Inject into admin KPI elements directly
-      var kpiActiveNow = document.getElementById('kpi-active-now');
-      if (kpiActiveNow) kpiActiveNow.textContent = activeNow;
-
-      // Update recent visitor table if it exists
-      renderFirebaseVisitorTable(recentList);
-
-    }, function (err) {
-      console.warn('[KnockSync] Analytics listener error:', err);
-    });
-
-    // Listen for daily stats
-    db.ref('knock/dailyStats').on('value', function (snap) {
-      var dailyData = snap.val();
-      if (!dailyData) return;
-
-      var todayKey = window.KnockAnalytics ? window.KnockAnalytics.getTodayDateKey() : new Date().toISOString().slice(0, 10);
-      var todayData = dailyData[todayKey];
-
-      if (todayData) {
-        var kpiToday = document.getElementById('kpi-today-unique');
-        if (kpiToday) kpiToday.textContent = todayData.uniqueVisitors || 0;
-
-        var kpiTotal = document.getElementById('kpi-total-views');
-        if (kpiTotal) kpiTotal.textContent = todayData.totalViews || 0;
-      }
-
-      // Render historical daily table from Firebase
-      renderFirebaseDailyTable(dailyData, todayKey);
-
-    }, function (err) {
-      console.warn('[KnockSync] Daily stats listener error:', err);
-    });
-  }
-
-  function renderFirebaseVisitorTable(recentList) {
-    var tbody = document.getElementById('visitor-log-tbody');
-    if (!tbody) return;
-
-    if (recentList.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-dim); padding: 20px;">No guest visits recorded yet. Open the invitation on a phone to test!</td></tr>';
-      return;
-    }
-
-    var html = '';
-    recentList.slice(0, 35).forEach(function (v) {
-      var devIcon = '💻 Desktop';
-      if (v.device === 'tv') devIcon = '📺 Smart TV';
-      else if (v.device === 'tablet') devIcon = '📟 Tablet';
-      else if (v.device === 'mobile') devIcon = '📱 Mobile';
-
-      var platBadge = '🪟 ' + (v.platform || 'Other');
-      if (v.platform === 'android') platBadge = '🤖 Android';
-      else if (v.platform === 'ios') platBadge = '🍏 iOS';
-      else if (v.platform === 'smart_tv') platBadge = '📺 Smart TV OS';
-
-      var statusBadge = v.isActive
-        ? '<span class="status-live-pill">🟢 Active Now</span>'
-        : '<span class="status-past-pill">⚪ Past</span>';
-
-      var timeAgo = formatRelTime(v.time);
-
-      html += '<tr>' +
-        '<td><code>' + v.id + '</code></td>' +
-        '<td><span class="visitor-badge">' + devIcon + '</span></td>' +
-        '<td>' + platBadge + '</td>' +
-        '<td>' + (v.screen || 'Auto') + '</td>' +
-        '<td>' + timeAgo + '</td>' +
-        '<td>' + statusBadge + '</td>' +
-        '</tr>';
-    });
-
-    tbody.innerHTML = html;
-  }
-
-  function renderFirebaseDailyTable(dailyData, todayKey) {
-    var tbody = document.getElementById('daily-history-tbody');
-    if (!tbody) return;
-
-    var list = [];
-    Object.keys(dailyData).forEach(function (dateKey) {
-      var d = dailyData[dateKey];
-      list.push({
-        date: dateKey,
-        uniqueVisitors: d.uniqueVisitors || 0,
-        totalViews: d.totalViews || 0,
-        devices: d.devices || { mobile: 0, desktop: 0, tablet: 0, tv: 0 }
-      });
-    });
-
-    list.sort(function (a, b) { return b.date.localeCompare(a.date); });
-
-    if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-dim); padding: 18px;">No visitor history yet.</td></tr>';
-      return;
-    }
-
-    var html = '';
-    list.forEach(function (item) {
-      var isToday = item.date === todayKey;
-      var dateLabel = formatDate(item.date);
-      var todayBadge = isToday ? '<span class="badge-pill badge-pill--today" style="margin-left:8px;">Today</span>' : '';
-
-      var devs = item.devices;
-      var devParts = [];
-      if (devs.mobile)  devParts.push('📱 ' + devs.mobile);
-      if (devs.desktop) devParts.push('💻 ' + devs.desktop);
-      if (devs.tablet)  devParts.push('📟 ' + devs.tablet);
-      if (devs.tv)      devParts.push('📺 ' + devs.tv);
-      var devStr = devParts.length > 0 ? devParts.join(' · ') : '<span style="color:var(--text-dim)">—</span>';
-
-      html += '<tr' + (isToday ? ' class="row-today-highlight"' : '') + '>' +
-        '<td><strong>' + dateLabel + '</strong>' + todayBadge + '</td>' +
-        '<td><span class="visitor-count-highlight">' + item.uniqueVisitors + '</span></td>' +
-        '<td>' + item.totalViews + '</td>' +
-        '<td>' + devStr + '</td>' +
-        '</tr>';
-    });
-
-    tbody.innerHTML = html;
-  }
-
-  function formatRelTime(isoStr) {
-    try {
-      var diff = Math.floor((Date.now() - new Date(isoStr).getTime()) / 1000);
-      if (diff < 60) return 'Just now';
-      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-      return Math.floor(diff / 86400) + 'd ago';
-    } catch (e) { return 'Recently'; }
-  }
-
-  function formatDate(dateStr) {
-    try {
-      var parts = dateStr.split('-');
-      var d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch (e) { return dateStr; }
-  }
-
-  /* ══════════════════════════════════════════════
-     HOOK INTO KnockConfig.save (admin pushes changes)
-  ═══════════════════════════════════════════════ */
   function hookConfigSave() {
     if (!window.KnockConfig || !isAdmin) return;
-
-    // Prevent double-hooking
-    if (window.KnockConfig._firebaseHooked) return;
-    window.KnockConfig._firebaseHooked = true;
-
-    var originalSave = window.KnockConfig.save;
-    window.KnockConfig.save = function (newConfig) {
-      var result = originalSave.call(window.KnockConfig, newConfig);
-      // Push to Firebase — db may not be ready yet, that's okay
-      // pushConfigToFirebase checks for db internally
+    if (window.KnockConfig._fbHooked) return;
+    window.KnockConfig._fbHooked = true;
+    var orig = window.KnockConfig.save;
+    window.KnockConfig.save = function (newCfg) {
+      var result = orig.call(window.KnockConfig, newCfg);
       pushConfigToFirebase(result);
       return result;
     };
   }
 
-  /* ══════════════════════════════════════════════
+  function listenForRemoteConfig() {
+    if (!db || isAdmin) return;
+
+    // Load once immediately on page open
+    db.ref('knock/config').once('value', function (snap) {
+      applyRemoteConfig(snap.val());
+    });
+
+    // Then poll every 15 seconds silently — no visible change to guest
+    setInterval(function () {
+      db.ref('knock/config').once('value', function (snap) {
+        applyRemoteConfig(snap.val());
+      });
+    }, 15000);
+  }
+
+  function applyRemoteConfig(remote) {
+    if (!remote || !window.KnockConfig) return;
+    var str = JSON.stringify(remote);
+    if (lastCfgStr === str) return; // nothing changed
+    lastCfgStr = str;
+    var local  = window.KnockConfig.get();
+    var merged = Object.assign({}, local, remote, {
+      adminName: local.adminName,
+      adminPass: local.adminPass
+    });
+    window.KnockConfig.save(merged);
+  }
+
+  /* ══════════════════════════════════════════════════
+     GUEST HEARTBEAT — pushes presence to Firebase
+     Every 5 seconds so Active Now stays alive
+  ══════════════════════════════════════════════════ */
+  function startGuestHeartbeat() {
+    if (!db || isAdmin) return;
+
+    pushHeartbeat(); // immediate
+    setInterval(pushHeartbeat, 5000);
+  }
+
+  function pushHeartbeat() {
+    if (!db || isAdmin) return;
+    var vid = null;
+    try { vid = localStorage.getItem('knock_visitor_uid_v1'); } catch(e){}
+    if (!vid) return;
+
+    var device   = window.KnockAnalytics ? window.KnockAnalytics.detectDevice()   : 'desktop';
+    var platform = window.KnockAnalytics ? window.KnockAnalytics.detectPlatform() : 'other';
+    var today    = window.KnockAnalytics ? window.KnockAnalytics.getTodayDateKey() : new Date().toISOString().slice(0,10);
+
+    // Write visitor heartbeat node
+    db.ref('knock/visitors/' + vid).set({
+      lastSeen: Date.now(),
+      device:   device,
+      platform: platform,
+      screen:   (window.screen.width || window.innerWidth) + 'x' + (window.screen.height || window.innerHeight),
+      date:     today
+    }).catch(function(){});
+
+    // Write into daily unique visitor map (one write per visitor per day)
+    db.ref('knock/daily/' + today + '/' + vid).set({
+      device:   device,
+      platform: platform,
+      ts:       Date.now()
+    }).catch(function(){});
+  }
+
+  /* ══════════════════════════════════════════════════
+     ADMIN ANALYTICS — real-time + 1-second UI refresh
+  ══════════════════════════════════════════════════ */
+  function startAdminAnalytics() {
+    if (!db || !isAdmin) return;
+
+    // Firebase real-time listener — fires the instant any guest heartbeats
+    db.ref('knock/visitors').on('value', function (snap) {
+      cachedVisitors = snap.val();
+      rebuildVisitorUI();
+    });
+
+    db.ref('knock/daily').on('value', function (snap) {
+      rebuildDailyUI(snap.val());
+    });
+
+    // 1-second tick — refreshes Active Now / Past without needing a data change
+    setInterval(function () {
+      if (cachedVisitors) rebuildVisitorUI();
+    }, 1000);
+  }
+
+  function rebuildVisitorUI() {
+    var visitors = cachedVisitors;
+    if (!visitors) {
+      setEl('kpi-active-now',   '0');
+      setEl('kpi-active-tabs',  '0');
+      renderVisitorTable([]);
+      return;
+    }
+
+    var now        = Date.now();
+    var activeNow  = 0;
+    var todayKey   = window.KnockAnalytics ? window.KnockAnalytics.getTodayDateKey() : new Date().toISOString().slice(0,10);
+    var devCounts  = { mobile:0, desktop:0, tablet:0, tv:0 };
+    var platCounts = { android:0, ios:0, windows:0, mac:0, smart_tv:0, other:0 };
+    var rows       = [];
+
+    Object.keys(visitors).forEach(function(vid) {
+      var v = visitors[vid];
+      if (!v) return;
+      var age      = now - (v.lastSeen || 0);
+      var isActive = age < 15000; // active if heartbeat within 15s
+      if (isActive) activeNow++;
+
+      if (v.date === todayKey) {
+        if (devCounts.hasOwnProperty(v.device))     devCounts[v.device]++;
+        if (platCounts.hasOwnProperty(v.platform))  platCounts[v.platform]++;
+      }
+
+      rows.push({
+        id:       vid.slice(0, 10),
+        device:   v.device   || 'desktop',
+        platform: v.platform || 'other',
+        screen:   v.screen   || '—',
+        time:     new Date(v.lastSeen || now).toISOString(),
+        isActive: isActive
+      });
+    });
+
+    rows.sort(function(a,b){ return new Date(b.time) - new Date(a.time); });
+
+    setEl('kpi-active-now',  activeNow);
+    setEl('kpi-active-tabs', activeNow);
+
+    // Device bars
+    var dTotal = (devCounts.mobile + devCounts.desktop + devCounts.tablet + devCounts.tv) || 1;
+    renderBar('dev-mobile',  devCounts.mobile,  dTotal);
+    renderBar('dev-desktop', devCounts.desktop, dTotal);
+    renderBar('dev-tablet',  devCounts.tablet,  dTotal);
+    renderBar('dev-tv',      devCounts.tv,      dTotal);
+
+    // Platform bars
+    var pOther = (platCounts.windows||0) + (platCounts.mac||0) + (platCounts.other||0);
+    var pTotal = (platCounts.android + platCounts.ios + pOther + platCounts.smart_tv) || 1;
+    renderBar('plat-android', platCounts.android,   pTotal);
+    renderBar('plat-ios',     platCounts.ios,        pTotal);
+    renderBar('plat-other',   pOther,                pTotal, pOther);
+    renderBar('plat-tv',      platCounts.smart_tv,   pTotal);
+
+    renderVisitorTable(rows);
+  }
+
+  function rebuildDailyUI(daily) {
+    if (!daily) return;
+    var todayKey = window.KnockAnalytics ? window.KnockAnalytics.getTodayDateKey() : new Date().toISOString().slice(0,10);
+    var list = [];
+    var totalViews = 0;
+
+    Object.keys(daily).forEach(function(dateKey) {
+      var visitorMap = daily[dateKey] || {};
+      var uCount = Object.keys(visitorMap).length;
+      var devs = { mobile:0, desktop:0, tablet:0, tv:0 };
+      Object.keys(visitorMap).forEach(function(vid) {
+        var d = visitorMap[vid].device;
+        if (devs.hasOwnProperty(d)) devs[d]++;
+      });
+      list.push({ date: dateKey, uniqueVisitors: uCount, totalViews: uCount, devices: devs });
+      totalViews += uCount;
+    });
+
+    list.sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+    // Update KPIs
+    var todayEntry = null;
+    for (var i=0; i<list.length; i++) { if(list[i].date===todayKey){ todayEntry=list[i]; break; } }
+    if (todayEntry) setEl('kpi-today-unique', todayEntry.uniqueVisitors);
+    setEl('kpi-total-views', totalViews);
+
+    // Daily history table
+    var tbody = document.getElementById('daily-history-tbody');
+    if (!tbody) return;
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:18px;">No visitor history yet.</td></tr>';
+      return;
+    }
+    var html = '';
+    list.forEach(function(item) {
+      var isToday    = item.date === todayKey;
+      var dateLabel  = fmtDate(item.date);
+      var todayBadge = isToday ? '<span class="badge-pill badge-pill--today" style="margin-left:8px;">Today</span>' : '';
+      var d          = item.devices;
+      var parts      = [];
+      if(d.mobile)  parts.push('📱 '+d.mobile);
+      if(d.desktop) parts.push('💻 '+d.desktop);
+      if(d.tablet)  parts.push('📟 '+d.tablet);
+      if(d.tv)      parts.push('📺 '+d.tv);
+      var devStr = parts.length ? parts.join(' · ') : '<span style="color:var(--text-dim)">—</span>';
+      html += '<tr'+(isToday?' class="row-today-highlight"':'')+'>'+
+        '<td><strong>'+dateLabel+'</strong>'+todayBadge+'</td>'+
+        '<td><span class="visitor-count-highlight">'+item.uniqueVisitors+'</span></td>'+
+        '<td>'+item.totalViews+'</td>'+
+        '<td>'+devStr+'</td>'+
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  function renderVisitorTable(rows) {
+    var tbody = document.getElementById('visitor-log-tbody');
+    if (!tbody) return;
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px;">No guest visits yet. Open the invite on a phone to test!</td></tr>';
+      return;
+    }
+    var html = '';
+    rows.slice(0, 50).forEach(function(v) {
+      var devIcon  = v.device==='mobile'  ? '📱 Mobile'
+                   : v.device==='tablet'  ? '📟 Tablet'
+                   : v.device==='tv'      ? '📺 Smart TV'
+                   :                        '💻 Desktop';
+      var platIcon = v.platform==='android'  ? '🤖 Android'
+                   : v.platform==='ios'      ? '🍏 iOS'
+                   : v.platform==='smart_tv' ? '📺 Smart TV OS'
+                   :                           '🪟 ' + (v.platform || 'Other');
+      var status   = v.isActive
+        ? '<span class="status-live-pill">🟢 Active Now</span>'
+        : '<span class="status-past-pill">⚪ Past</span>';
+      html += '<tr>'+
+        '<td><code>'+v.id+'</code></td>'+
+        '<td><span class="visitor-badge">'+devIcon+'</span></td>'+
+        '<td>'+platIcon+'</td>'+
+        '<td>'+v.screen+'</td>'+
+        '<td>'+fmtTime(v.time)+'</td>'+
+        '<td>'+status+'</td>'+
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  /* ─── Helpers ──────────────────────────────────── */
+  function setEl(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  function renderBar(prefix, count, total, overrideCount) {
+    var pct     = Math.round((count / total) * 100);
+    var display = overrideCount !== undefined ? overrideCount : count;
+    var pEl     = document.getElementById(prefix + '-pct');
+    var bEl     = document.getElementById(prefix + '-bar');
+    if (pEl) pEl.textContent  = pct + '% (' + display + ')';
+    if (bEl) bEl.style.width  = pct + '%';
+  }
+
+  function fmtTime(iso) {
+    try {
+      var diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+      if (diff < 5)     return 'Just now';
+      if (diff < 60)    return diff + 's ago';
+      if (diff < 3600)  return Math.floor(diff/60)   + 'm ago';
+      if (diff < 86400) return Math.floor(diff/3600)  + 'h ago';
+      return Math.floor(diff/86400) + 'd ago';
+    } catch(e) { return 'Recently'; }
+  }
+
+  function fmtDate(str) {
+    try {
+      var p = str.split('-');
+      return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+    } catch(e) { return str; }
+  }
+
+  /* ══════════════════════════════════════════════════
      INIT
-  ═══════════════════════════════════════════════ */
+  ══════════════════════════════════════════════════ */
   function init() {
     detectPageType();
 
-    // Hook config save immediately — before Firebase even connects
-    // so no admin action is ever missed
+    // Hook config save immediately — never miss an admin save
+    if (isAdmin) hookConfigSave();
+
+    initFirebase();
+
     if (isAdmin) {
-      hookConfigSave();
-    }
-
-    function run() {
-      initFirebase();
-      if (isAdmin) {
-        // Wait for Firebase to connect then start analytics listener
-        var waitForDb = setInterval(function () {
-          if (db) {
-            clearInterval(waitForDb);
-            setTimeout(listenForAnalyticsOnAdmin, 500);
-          }
-        }, 200);
-      }
-    }
-
-    // Wait for KnockConfig to be available
-    if (window.KnockConfig) {
-      run();
+      // Wait for db to be ready then start analytics
+      var wait = setInterval(function() {
+        if (db) { clearInterval(wait); startAdminAnalytics(); }
+      }, 200);
     } else {
-      var attempts = 0;
-      var waitForConfig = setInterval(function () {
-        attempts++;
-        if (window.KnockConfig) {
-          clearInterval(waitForConfig);
-          run();
-        } else if (attempts > 20) {
-          clearInterval(waitForConfig);
-          console.warn('[KnockSync] KnockConfig not available, sync disabled.');
+      // Guest: load remote config + start heartbeat
+      var wait2 = setInterval(function() {
+        if (db) {
+          clearInterval(wait2);
+          listenForRemoteConfig();
+          startGuestHeartbeat();
         }
-      }, 100);
+      }, 200);
     }
   }
 
@@ -542,8 +401,7 @@
 
   window.KnockSync = {
     push: pushConfigToFirebase,
-    isConfigured: function () { return isConfigured; },
-    isConnected: function () { return db !== null; }
+    isConnected: function() { return db !== null; }
   };
 
 })(window);
