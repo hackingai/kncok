@@ -207,7 +207,7 @@
       var v = visitors[vid];
       if (!v) return;
       var age      = now - (v.lastSeen || 0);
-      var isActive = age < 15000;
+      var isActive = age < 60000; // 60s window — handles Android background tab pausing JS
       if (isActive) activeNow++;
 
       // Count ALL visitors who visited today for unique count + device/platform bars

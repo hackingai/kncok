@@ -122,15 +122,27 @@
 
   /**
    * Categorizes operating system / environment
+   * Order matters — check Android BEFORE iOS to avoid misclassification
    */
   function detectPlatform() {
-    var ua = (navigator.userAgent || '').toLowerCase();
+    var ua = navigator.userAgent || '';
+
+    // Smart TV first
     if (/smart[-_]?tv|tizen|webos|hbbtv|roku|bravia|googletv|apple tv|firetv|vizio|hisense/i.test(ua)) return 'smart_tv';
+
+    // Android — must check BEFORE iOS because some Android browsers include "like iPhone"
     if (/android/i.test(ua)) return 'android';
-    if (/iphone|ipad|ipod/i.test(ua) || (navigator.maxTouchPoints > 1 && /macintosh/i.test(ua))) return 'ios';
+
+    // iOS — iPhone, iPod, iPad (including modern iPad which says "Macintosh")
+    if (/iphone|ipod/i.test(ua)) return 'ios';
+    if (/ipad/i.test(ua)) return 'ios';
+    if (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return 'ios';
+
+    // Desktop OS
     if (/windows/i.test(ua)) return 'windows';
     if (/macintosh|mac os/i.test(ua)) return 'mac';
     if (/linux/i.test(ua)) return 'linux';
+
     return 'other';
   }
 
