@@ -120,7 +120,7 @@
 
       // Hero Section
       heroEyebrow: 'మీకు సాదర ఆహ్వానం',
-      heroTitleScript: 'గృహప్రవేశ',
+      heroTitleScript: 'నూతన గృహప్రవేశ',
       heroTitleMain: 'మహోత్సవం',
       heroFamily: 'వనుకూరి వీణ దామోదర్ రెడ్డి',
       heroDatePill: '31 August 2026',
