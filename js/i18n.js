@@ -103,9 +103,9 @@
     },
 
     te: {
-      metaDescription: '31 ఆగస్టు 2026 న జరుగు వనుకూరు వీణ దామోదర్ రెడ్డి గారి నూతన గృహప్రవేశ మహోత్సవానికి సాదర ఆహ్వానం.',
-      ogTitle: 'వనుకూరు వీణ దామోదర్ రెడ్డి — గృహప్రవేశ మహోత్సవం',
-      pageTitle: 'వనుకూరు వీణ దామోదర్ రెడ్డి — గృహప్రవేశ మహోత్సవం',
+      metaDescription: '31 ఆగస్టు 2026 న జరుగు వనుకూరి వీణ దామోదర్ రెడ్డి గారి నూతన గృహప్రవేశ మహోత్సవానికి సాదర ఆహ్వానం.',
+      ogTitle: 'వనుకూరి వీణ దామోదర్ రెడ్డి — గృహప్రవేశ మహోత్సవం',
+      pageTitle: 'వనుకూరి వీణ దామోదర్ రెడ్డి — గృహప్రవేశ మహోత్సవం',
 
       // Shloka
       shloka: '॥ శ్రీ గణేశాయ నమః ॥',
@@ -113,7 +113,7 @@
       // Opening Overlay
       openingEyebrow: 'మీకు సాదర ఆహ్వానం',
       openingTitle: 'గృహప్రవేశ<br />మహోత్సవం',
-      openingFamily: 'వనుకూరు వీణ దామోదర్ రెడ్డి',
+      openingFamily: 'వనుకూరి వీణ దామోదర్ రెడ్డి',
       openingDate: '31 August 2026',
       openingTime: '3:00 AM',
       openingHint: 'ఆహ్వానాన్ని వీక్షించండి',
@@ -122,13 +122,13 @@
       heroEyebrow: 'మీకు సాదర ఆహ్వానం',
       heroTitleScript: 'గృహప్రవేశ',
       heroTitleMain: 'మహోత్సవం',
-      heroFamily: 'వనుకూరు వీణ దామోదర్ రెడ్డి',
+      heroFamily: 'వనుకూరి వీణ దామోదర్ రెడ్డి',
       heroDatePill: '31 August 2026',
       heroTimePill: '3:00 AM',
 
       // House Photo Frame
       photoCaption: 'నూతన గృహం · నూతన అధ్యాయం',
-      photoAlt: 'వనుకూరు వీణ దామోదర్ రెడ్డి గారి నూతన గృహం',
+      photoAlt: 'వనుకూరి వీణ దామోదర్ రెడ్డి గారి నూతన గృహం',
 
       // Welcome Section
       welcomeLine1: 'నూతన గృహం, నూతన ఆరంభం,',
@@ -175,14 +175,14 @@
       addressCopyAria: 'చిరునామాను క్లిప్‌బోర్డ్‌కు కాపీ చేయండి',
       addressCopied: 'చిరునామా కాపీ చేయబడింది!',
       directionsBtn: 'గూగుల్ మ్యాప్స్ దారి (Directions)',
-      directionsAria: 'వనుకూరు వీణ దామోదర్ రెడ్డి గారి నివాసానికి దారి చూడండి',
+      directionsAria: 'వనుకూరి వీణ దామోదర్ రెడ్డి గారి నివాసానికి దారి చూడండి',
       directionsNote: 'వేడుకకు ముందు మార్గదర్శకాలు పంపబడతాయి',
 
       // Closing Section
       closingLine1: 'మీ రాక కోసం',
       closingLine2: 'ఆనందంగా వేచి చూస్తున్నాము',
       closingThankYou: 'మా నూతన ప్రారంభంలో భాగస్వామ్యమైనందుకు హృదయపూర్వక ధన్యవాదాలు.',
-      closingFamily: 'వనుకూరు వీణ దామోదర్ రెడ్డి',
+      closingFamily: 'వనుకూరి వీణ దామోదర్ రెడ్డి',
       closingDate: '31 August 2026',
 
       // Floating Controls & Misc
