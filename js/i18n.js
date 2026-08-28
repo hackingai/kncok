@@ -59,6 +59,7 @@
       cardGallerySub: 'Tap to View ➔',
 
       // Add to Calendar
+      lunchNote: 'Followed by lunch at 12:20 PM',
       calendarBtn: 'Add to Calendar',
       calendarAria: 'Add Vanukuri Veena Damodar Reddy Housewarming Ceremony to your calendar',
       calGoogle: 'Google Calendar',
@@ -148,6 +149,7 @@
       cardGallerySub: 'Tap to View ➔',
 
       // Add to Calendar — Kept in English as requested
+      lunchNote: 'Followed by lunch at 12:20 PM',
       calendarBtn: 'Add to Calendar',
       calendarAria: 'Add Vanukuri Veena Damodar Reddy Housewarming Ceremony to your calendar',
       calGoogle: 'Google Calendar',
@@ -325,6 +327,9 @@
     if (galleryCardSub) galleryCardSub.textContent = t.cardGallerySub;
 
     // Add to calendar CTA
+    var lunchNoteEl = document.getElementById('calendar-lunch-note');
+    if (lunchNoteEl) lunchNoteEl.textContent = t.lunchNote;
+
     var calBtn = document.getElementById('add-to-calendar-btn');
     if (calBtn) {
       var icon = calBtn.querySelector('.btn-icon');
